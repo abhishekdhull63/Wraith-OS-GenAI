@@ -56,8 +56,8 @@ True peer-to-peer tunneling without a centralized backend:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/deep-cover-hub.git
-   cd deep-cover-hub
+   git clone https://github.com/abhishekdhull63/Deep-Cover-HackXtream.git
+   cd Deep-Cover-HackXtream
    ```
 
 2. **Install dependencies:**
@@ -79,7 +79,7 @@ True peer-to-peer tunneling without a centralized backend:
 ## 📖 Operator Manual
 
 ### Accessing the Real Dashboard
-1. When presented with the Excel/Teams decoy, trigger the **Wraith Terminal** by pressing the <code>`</code> (tilde/backquote) key or by triple-clicking.
+1. When presented with the Excel decoy, click the hidden drop-down menu by clicking (`) at the top of the spreadsheet to reveal the Wraith Terminal.
 2. The drop-down terminal will appear.
 3. Type `unlock` and hit enter.
 4. If a Pattern Lock appears, drawing the primary sequence unlocks the dashboard. Drawing the duress sequence executes a self-destruct (wipes DBs).
