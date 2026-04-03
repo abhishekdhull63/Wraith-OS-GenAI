@@ -14,6 +14,10 @@ export default function WraithTerminal({ onCommand, onUnlock }: WraithTerminalPr
     { text: 'Type "help" for a list of master operator commands.', type: 'system' }
   ]);
   const [inputStr, setInputStr] = useState('');
+  const [timestamp, setTimestamp] = useState(() => new Date().toLocaleTimeString('en-US', { hour12: false }));
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isError, setIsError] = useState(false);
   
   // Chronos Telemetry State
   const [isCalibrating, setIsCalibrating] = useState(false);
@@ -21,6 +25,7 @@ export default function WraithTerminal({ onCommand, onUnlock }: WraithTerminalPr
 
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Global terminal toggle listener
   useEffect(() => {
@@ -67,11 +72,17 @@ export default function WraithTerminal({ onCommand, onUnlock }: WraithTerminalPr
     };
   }, []);
 
-  // Auto-scroll
+  // Live timestamp ticker
   useEffect(() => {
-    if (scrollRef.current) {
-       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    const timer = setInterval(() => {
+      setTimestamp(new Date().toLocaleTimeString('en-US', { hour12: false }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history, isOpen]);
 
   const pushSystemMessage = async (msg: string, delayMs: number = 20) => {
@@ -93,7 +104,33 @@ export default function WraithTerminal({ onCommand, onUnlock }: WraithTerminalPr
     const args = parts.slice(1);
 
     setHistory(h => [...h, { text: `root@deep-cover:~# ${cmdLine}`, type: 'cmd' }]);
+    setCommandHistory(prev => [...prev, cmdLine]);
+    setHistoryIndex(-1);
     setInputStr('');
+
+    // Instant commands (no latency)
+    if (command === 'clear') {
+      setHistory([]);
+      return;
+    }
+    if (command === 'chronos' && args[0] === '--calibrate') {
+      setIsCalibrating(prev => {
+        const next = !prev;
+        if (next) {
+          pushSystemMessage('Initializing Native Geolocation & Magnetometer APIs...');
+          pushSystemMessage('Mounting live coordinate matrices into HUD stream...');
+        } else {
+          pushSystemMessage('Terminating Chronos array streams...');
+        }
+        return next;
+      });
+      return;
+    }
+
+    // Fake network latency for all other commands
+    setHistory(h => [...h, { text: '[SYSTEM] Processing...', type: 'system' }]);
+    await new Promise(r => setTimeout(r, 400 + Math.random() * 200));
+    setHistory(h => h.filter(entry => entry.text !== '[SYSTEM] Processing...'));
     
     try {
       if (command === 'help') {
@@ -118,8 +155,6 @@ export default function WraithTerminal({ onCommand, onUnlock }: WraithTerminalPr
          await pushSystemMessage('[OK] DECOY OBFUSCATION DISSOLVED.', 400);
          onCommand('unlock', []);
          if (onUnlock) onUnlock();
-      } else if (command === 'clear') {
-         setHistory([]);
       } else if (command === 'arm' && args[0] === 'faraday') {
          await pushSystemMessage('Initializing interface isolation proxy...', 400);
          await pushSystemMessage('[OK] Wi-Fi adapter hardware override enabled.', 300);
@@ -147,19 +182,14 @@ export default function WraithTerminal({ onCommand, onUnlock }: WraithTerminalPr
          await pushSystemMessage('Deriving fractional polynomial logic gates...', 600);
          await pushSystemMessage('Evacuating persistent bounds...', 400);
          onCommand('shatter --horcrux', []);
-      } else if (command === 'chronos' && args[0] === '--calibrate') {
-         setIsCalibrating(prev => {
-            const next = !prev;
-            if (next) {
-               pushSystemMessage('Initializing Native Geolocation & Magnetometer APIs...');
-               pushSystemMessage('Mounting live coordinate matrices into HUD stream...');
-            } else {
-               pushSystemMessage('Terminating Chronos array streams...');
-            }
-            return next;
-         });
+      } else if (command === 'whoami') {
+         await pushSystemMessage('UNAUTHORIZED QUERY. Access logged and reported to local authorities.');
+      } else if (command === 'sudo') {
+         await pushSystemMessage('Nice try. This incident will be reported.');
       } else {
          await pushSystemMessage(`bash: ${command}: command not found`);
+         setIsError(true);
+         setTimeout(() => setIsError(false), 300);
       }
     } catch(err) {
       await pushSystemMessage('Command pipeline crashed.');
@@ -177,11 +207,13 @@ export default function WraithTerminal({ onCommand, onUnlock }: WraithTerminalPr
       
       {/* History Area */}
       <div className="flex-1 relative overflow-hidden">
-        <div ref={scrollRef} className="absolute inset-0 overflow-y-auto p-4 space-y-1 text-xs">
+        {/* Scanline Overlay */}
+        <div className="scanlines absolute inset-0 z-10" />
+        <div ref={scrollRef} className="absolute inset-0 overflow-y-auto no-scrollbar p-4 space-y-1 text-xs">
            {history.map((h, i) => (
               <div key={i} className={h.type === 'cmd' 
-                 ? 'text-slate-100 font-bold mt-2' 
-                 : 'text-gray-400 pl-4 border-l-2 border-gray-600'}>
+                 ? 'text-slate-100 font-bold mt-2 text-glow-cyan' 
+                 : 'text-gray-400 pl-4 border-l-2 border-gray-600 text-glow-cyan'}>
                  {h.text}
               </div>
            ))}
@@ -214,25 +246,54 @@ export default function WraithTerminal({ onCommand, onUnlock }: WraithTerminalPr
                  )}
               </div>
            )}
+           <div ref={messagesEndRef} />
         </div>
       </div>
       
-      {/* Input Line */}
-      <form onSubmit={handleExecute} className="flex items-center bg-[#181818] p-3 border-t border-gray-700 gap-2">
-         <span className="text-slate-400 font-bold text-sm whitespace-nowrap">system@local:~%</span>
-         <input 
-            ref={inputRef}
-            type="text" 
-            autoCapitalize="off"
-            autoComplete="off"
-            spellCheck="false"
-            className="flex-1 bg-transparent border-none outline-none text-slate-200 font-mono text-sm caret-slate-400"
-            value={inputStr}
-            onChange={(e) => setInputStr(e.target.value)}
-            onKeyDown={(e) => {
-               if (e.key === 'Escape') setIsOpen(false);
-            }}
-         />
+      {/* Input Line — Invisible overlay pattern */}
+      <form onSubmit={handleExecute} className={`flex items-center bg-[#181818] p-3 border-t border-gray-700 gap-2 ${isError ? 'animate-error-shake' : ''}`}>
+         <span className="text-slate-400 font-bold text-sm whitespace-nowrap"><span className="opacity-50">[{timestamp}]</span> root@deep-cover:~#</span>
+         <div className="flex-1 relative h-5">
+            {/* Real input — invisible but captures all keystrokes */}
+            <input 
+               ref={inputRef}
+               type="text" 
+               autoCapitalize="off"
+               autoComplete="off"
+               spellCheck="false"
+               className="absolute inset-0 w-full h-full bg-transparent border-none outline-none opacity-0 font-mono text-sm z-10"
+               value={inputStr}
+               onChange={(e) => setInputStr(e.target.value)}
+               onKeyDown={(e) => {
+                  if (e.key === 'Escape') setIsOpen(false);
+                  if (e.key === 'ArrowUp') {
+                     e.preventDefault();
+                     setHistoryIndex(prev => {
+                        const newIdx = prev === -1 ? commandHistory.length - 1 : Math.max(0, prev - 1);
+                        if (commandHistory[newIdx]) setInputStr(commandHistory[newIdx]);
+                        return newIdx;
+                     });
+                  }
+                  if (e.key === 'ArrowDown') {
+                     e.preventDefault();
+                     setHistoryIndex(prev => {
+                        const newIdx = prev + 1;
+                        if (newIdx >= commandHistory.length) {
+                           setInputStr('');
+                           return -1;
+                        }
+                        setInputStr(commandHistory[newIdx]);
+                        return newIdx;
+                     });
+                  }
+               }}
+            />
+            {/* Visible text + block cursor */}
+            <div className="flex items-center h-full pointer-events-none">
+               <span className={`${isError ? 'text-red-500' : 'text-slate-200'} font-mono text-sm whitespace-pre transition-colors`}>{inputStr}</span>
+               <span className={`${isError ? 'text-red-500' : 'text-cyan-400'} font-mono text-sm transition-colors`} style={{ animation: 'blink-cursor 1s step-end infinite' }}>█</span>
+            </div>
+         </div>
       </form>
     </div>
   );

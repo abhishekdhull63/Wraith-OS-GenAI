@@ -61,8 +61,8 @@ export default function ExcelDecoy() {
       {/* Excel Header */}
       <div className="flex items-center justify-between bg-[#107c41] text-white px-2 py-1 select-none shadow-md z-10 relative">
         <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1 font-semibold ml-2">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM12.8 19h-2l-1.6-3.3-1.6 3.3H5.4l2.5-4.5-2.2-4.1h2.1l1.3 2.9 1.4-2.9h1.9l-2.2 4.1 2.6 4.5z"/></svg>
+          <div className="flex items-center gap-1.5 font-semibold ml-2">
+            <img src="/spreadsheet-icon.png" alt="Excel" width="20" height="20" className="rounded-sm" />
             Excel
           </div>
           <span className="opacity-80">|</span>
@@ -171,8 +171,8 @@ export default function ExcelDecoy() {
                   key={cellId} 
                   onMouseDown={() => setFocusedCell(cellId)}
                   className={`
-                    w-24 flex-shrink-0 border-r border-b border-gray-300 px-0 py-0 text-xs text-black bg-white overflow-hidden whitespace-nowrap
-                    ${isFocused ? 'border-2 border-[#107c41] outline-none z-0 relative shadow-[0_0_0_2px_rgba(16,124,65,0.2)]' : ''}
+                    w-24 flex-shrink-0 border-r border-b border-gray-300 px-0 py-0 text-xs text-black bg-white overflow-visible whitespace-nowrap
+                    ${isFocused ? 'border-2 border-[#107c41] outline-none z-[1] relative shadow-[0_0_0_2px_rgba(16,124,65,0.2)]' : ''}
                     ${isHeader ? 'font-bold border-b-[3px] border-black bg-gray-50' : ''}
                     ${isTotal ? 'font-bold border-t-[3px] border-black bg-gray-100' : ''}
                   `}
@@ -186,6 +186,10 @@ export default function ExcelDecoy() {
                     onKeyDown={(e) => e.stopPropagation()} 
                     spellCheck={false}
                   />
+                  {/* Excel fill handle */}
+                  {isFocused && (
+                    <div className="absolute -bottom-[3px] -right-[3px] w-[7px] h-[7px] bg-[#107c41] border border-white cursor-crosshair z-10" />
+                  )}
                 </div>
               );
             })}

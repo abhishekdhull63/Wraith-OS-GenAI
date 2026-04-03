@@ -69,10 +69,11 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
          <button 
            onClick={handleStart}
            className="flex items-center gap-4 group focus:outline-none select-none cursor-pointer"
+           style={{ animation: 'crt-flicker 4s infinite' }}
          >
             <WraithHexIcon 
               size={56} 
-              className="text-cyan-400 group-hover:text-emerald-400 transition-colors duration-500 drop-shadow-[0_0_20px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_30px_rgba(16,185,129,0.6)] animate-[pulse_3s_ease-in-out_infinite]" 
+              className="text-cyan-400 group-hover:text-emerald-400 transition-colors duration-500 drop-shadow-[0_0_20px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_30px_rgba(16,185,129,0.6)]" 
             />
             <h1 className="text-white font-black font-mono text-5xl tracking-widest group-hover:text-emerald-300 transition-colors duration-500">
               Deep-Cover

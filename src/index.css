@@ -68,6 +68,74 @@
   50% { opacity: 1; }
 }
 
+@keyframes crt-flicker {
+  0%, 92%, 100% { opacity: 1; }
+  93% { opacity: 0.7; }
+  94% { opacity: 1; }
+  96% { opacity: 0.8; }
+  97% { opacity: 1; }
+}
+
+@keyframes blink-cursor {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes error-shake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-4px); }
+  20% { transform: translateX(4px); }
+  30% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  50% { transform: translateX(-3px); }
+  60% { transform: translateX(3px); }
+  70% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+  90% { transform: translateX(-1px); }
+}
+
+.animate-error-shake {
+  animation: error-shake 0.3s ease-out;
+}
+
+/* ─── Selection Highlight ──────────────────────────────────────────────────── */
+
+::selection {
+  background-color: #00f3ff;
+  color: #000000;
+}
+
+/* ─── No-Scrollbar Utility ─────────────────────────────────────────────────── */
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;           /* Chrome, Safari, Edge */
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE 10+ */
+  scrollbar-width: none;     /* Firefox */
+}
+/* ─── CRT Phosphor Text Glow ───────────────────────────────────────────────── */
+
+.text-glow-cyan {
+  text-shadow:
+    0 0 5px rgba(0, 243, 255, 0.6),
+    0 0 10px rgba(0, 243, 255, 0.4);
+}
+
+/* ─── Hardware Scanline Overlay ────────────────────────────────────────────── */
+
+.scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1) 0px,
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+}
+
 /* ─── Base Styles ──────────────────────────────────────────────────────────── */
 
 * {
