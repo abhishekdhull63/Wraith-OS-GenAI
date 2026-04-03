@@ -32,6 +32,14 @@ True peer-to-peer tunneling without a centralized backend:
 - **Dead Drop:** Offline data transfer mechanism using WebRTC protocols. Generates cryptographic Base64 handshakes that you must manually exchange (e.g., via USB or secure QR).
 - **Dark Channel & Telemetry Feed:** Real-time encrypted text overlays and P2P chatter that exists entirely in RAM and bypasses all external servers.
 
+### 🎨 Immersive UI/UX Polish
+A deeply engaging "retro-tactical" visual experience:
+- **CRT Phosphor Glow & Scanlines:** Hardware monitor simulation with cyan text-glow and faint LCD scanline overlays for authentic rendering.
+- **Dynamic Terminal Interaction:** Retro blinking block cursor that perfectly tracks input, simulated network latency (e.g., `[SYSTEM] Processing...`), and automatic scroll-to-bottom capabilities.
+- **Command History:** Arrow keys (`Up`/`Down`) smoothly navigate through past commands.
+- **Easter Eggs & Visual Feedback:** Unauthorized system queries (`sudo`, `whoami`) trigger visual "access denied" shakes (`error-shake` animation) and flash red text.
+- **Enhanced Decoy Elements:** The Excel decoy actively mimics the real deal with a live title metadata (`Q3_Financial_Report - Excel`), appropriate favicon, internal titlebar branding, and an interactive active cell node (fill handle crosshair).
+
 ### 🧠 Autonomous & Local Intelligence
 - **Local AI Analysis:** Evaluates intelligence payloads completely on-device using `@mlc-ai/web-llm` and TensorFlow, preventing any chance of cloud interception.
 - **Vault Interrogation:** Secure IndexedDB locker for preserving analyzed intelligence, protected by SHA-256 fingerprinting.
