@@ -15,7 +15,6 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import {
-  Shield,
   Radio,
   Mic,
   MicOff,
@@ -75,6 +74,7 @@ import LazarusUnlock from './LazarusUnlock';
 import TelemetryLog from './TelemetryLog';
 import type { IncomingP2PMessage } from './TelemetryLog';
 import ThreatAnalysisBoard from './ThreatAnalysisBoard';
+import WraithHexIcon from './WraithHexIcon';
 // import WraithTerminal from './WraithTerminal'; // Removed as component is no longer rendered
 // ToolCallResult removed — handleAnalyze no longer uses SDK tool calls
 
@@ -510,7 +510,7 @@ export default function DeepCoverDashboard({ onLock, isBooted = true, isUnlocked
             className="p-2 rounded-lg hover:bg-white/5 transition-colors reveal-btn"
             aria-label="Toggle sidebar"
           >
-            <Shield className="w-6 h-6 text-cyan-400" />
+            <WraithHexIcon size={24} className="text-cyan-400" />
           </button>
           {sidebarOpen && (
             <div className="animate-fade-in">

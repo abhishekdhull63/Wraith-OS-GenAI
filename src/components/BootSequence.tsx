@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import WraithHexIcon from './WraithHexIcon';
 
 interface BootSequenceProps {
   onComplete: () => void;
@@ -67,9 +68,15 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
       <div className="fixed inset-0 bg-black flex items-center justify-center z-[999999]">
          <button 
            onClick={handleStart}
-           className="text-white font-bold font-mono text-3xl tracking-[1em] uppercase hover:text-emerald-300 hover:shadow-[0_0_30px_rgba(16,185,129,0.8)] transition-all animate-[pulse_2s_infinite] select-none focus:outline-none"
+           className="flex items-center gap-4 group focus:outline-none select-none cursor-pointer"
          >
-            [ ENTER ]
+            <WraithHexIcon 
+              size={56} 
+              className="text-cyan-400 group-hover:text-emerald-400 transition-colors duration-500 drop-shadow-[0_0_20px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_30px_rgba(16,185,129,0.6)] animate-[pulse_3s_ease-in-out_infinite]" 
+            />
+            <h1 className="text-white font-black font-mono text-5xl tracking-widest group-hover:text-emerald-300 transition-colors duration-500">
+              Deep-Cover
+            </h1>
          </button>
       </div>
     );
