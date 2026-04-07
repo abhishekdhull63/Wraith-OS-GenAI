@@ -34,9 +34,7 @@ import {
   FileText,
   VolumeX, // Added for voice masking UI
   PenTool,
-  Network,
   Ghost,
-  Terminal,
 } from 'lucide-react';
 import { useSecureIntelligence } from '../hooks/useSecureIntelligence';
 import type { IntelError } from '../hooks/useSecureIntelligence';
@@ -56,15 +54,12 @@ import type { DeadDropHandle } from './DeadDrop';
 import OpsecDashboard from './OpsecDashboard';
 import IntelligenceBriefing from './IntelligenceBriefing';
 import SecureSketchpad from './SecureSketchpad';
-import ConspiracyBoard from './ConspiracyBoard';
-import DarkChannel from './DarkChannel';
 import { saveToLocker } from '../lib/locker';
 import { useFaradayMonitor } from '../lib/useFaradayMonitor';
 import { useWhisperProtocol } from '../hooks/useWhisperProtocol';
 import { useDeadMansSwitch } from '../hooks/useDeadMansSwitch';
 import { useFaradayCage } from '../hooks/useFaradayCage';
-import HorcruxGenerator from './HorcruxGenerator';
-import LazarusUnlock from './LazarusUnlock';
+
 import TelemetryLog from './TelemetryLog';
 import type { IncomingP2PMessage } from './TelemetryLog';
 import ThreatAnalysisBoard from './ThreatAnalysisBoard';
@@ -163,14 +158,6 @@ export default function DeepCoverDashboard({
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isSketchpadOpen, setIsSketchpadOpen] = useState(false);
-  const [isConspiracyBoardOpen, setIsConspiracyBoardOpen] = useState(false);
-  const [isDarkChannelOpen, setIsDarkChannelOpen] = useState(false);
-
-  // ── Oppenheimer State ───────────────────────────────────────────────────────
-  const [showHorcruxGen, setShowHorcruxGen] = useState(false);
-  const [isOppenheimerLocked, setIsOppenheimerLocked] = useState(
-    localStorage.getItem('oppenheimer_active') === 'true' && !sessionStorage.getItem('oppenheimer_seed'),
-  );
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
   const addLog = useCallback((type: LogEntry['type'], message: string) => {
@@ -184,7 +171,7 @@ export default function DeepCoverDashboard({
       // Global Panic Trigger for Honeytoken/Blur consistency
       for (let i = 0; i < 3; i++) window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     },
-    onOpenDarkChannel: () => setIsDarkChannelOpen(true),
+
     onWipeMemory: () => {
       addLog('ERROR', 'WIPE COMMAND EXECUTED. PURGING VAULT DATA.');
       const dbs = ['deep-cover-evidence-locker', 'DeepCoverLocker', 'IntruderLogs'];
@@ -516,21 +503,7 @@ export default function DeepCoverDashboard({
       <div className="flex min-h-screen">
         <DeadMansSwitch onLog={addLog} />
 
-        {showHorcruxGen && (
-          <HorcruxGenerator
-            onComplete={() => {
-              setShowHorcruxGen(false);
-              setIsOppenheimerLocked(true);
-              addLog(
-                'WARNING',
-                '💀 OPPENHEIMER PROTOCOL: Master key evacuated from disk. System is operating on fractional logic boundaries.',
-              );
-            }}
-            onCancel={() => setShowHorcruxGen(false)}
-          />
-        )}
 
-        {isOppenheimerLocked && <LazarusUnlock onUnlocked={() => setIsOppenheimerLocked(false)} />}
 
         {/* ═══════════════════════════════════════════════════════════════════════
           SIDEBAR  (translated from st.sidebar)
@@ -569,7 +542,7 @@ export default function DeepCoverDashboard({
                 faradayActive={!isOnline}
                 vaultEncrypted={true}
                 onToggleFaraday={() => setIsFaradayArmed(!isFaradayArmed)}
-                onArmOppenheimer={() => setShowHorcruxGen(true)}
+
               />
 
               {/* Active Mesh Nodes */}
@@ -653,20 +626,6 @@ export default function DeepCoverDashboard({
               >
                 <PenTool className="w-4 h-4" />
                 NEW SKETCH
-              </button>
-              <button
-                onClick={() => setIsConspiracyBoardOpen(true)}
-                className="w-full py-2 px-3 rounded-lg border border-red-500/30 bg-red-500/10 text-red-500 font-mono text-xs font-bold hover:bg-red-500/20 transition-colors reveal-btn flex items-center justify-center gap-2"
-              >
-                <Network className="w-4 h-4" />
-                CONSPIRACY BOARD
-              </button>
-              <button
-                onClick={() => setIsDarkChannelOpen(true)}
-                className="w-full py-2 px-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-mono text-xs font-bold hover:bg-emerald-500/20 transition-colors reveal-btn flex items-center justify-center gap-2"
-              >
-                <Terminal className="w-4 h-4" />
-                DARK CHANNEL
               </button>
             </div>
           )}
@@ -1175,20 +1134,6 @@ export default function DeepCoverDashboard({
 
         {/* Native Render Layers */}
         {isSketchpadOpen && <SecureSketchpad onClose={() => setIsSketchpadOpen(false)} onLog={addLog} />}
-        {isConspiracyBoardOpen && <ConspiracyBoard onClose={() => setIsConspiracyBoardOpen(false)} />}
-        {isDarkChannelOpen && (
-          <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-6 animate-fade-in backdrop-blur-sm">
-            <div className="relative w-full max-w-5xl rounded-2xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
-              <button
-                onClick={() => setIsDarkChannelOpen(false)}
-                className="absolute top-4 right-4 z-50 p-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 font-bold font-mono uppercase text-[10px] tracking-widest border border-red-500/30"
-              >
-                Close Override
-              </button>
-              <DarkChannel />
-            </div>
-          </div>
-        )}
 
         {/* Microscopic Dead Man's Switch Countdown */}
         <div className="fixed bottom-1 right-2 text-[8px] font-mono font-bold text-red-500 opacity-20 pointer-events-none z-[9999] select-none tracking-widest">

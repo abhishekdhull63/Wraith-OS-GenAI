@@ -15,7 +15,6 @@ interface OpsecDashboardProps {
   faradayActive: boolean;
   vaultEncrypted: boolean;
   onToggleFaraday?: () => void;
-  onArmOppenheimer?: () => void;
 }
 
 export default function OpsecDashboard({
@@ -23,7 +22,6 @@ export default function OpsecDashboard({
   faradayActive,
   vaultEncrypted,
   onToggleFaraday,
-  onArmOppenheimer,
 }: OpsecDashboardProps) {
   const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
   const [isCharging, setIsCharging] = useState(false);
@@ -167,18 +165,6 @@ export default function OpsecDashboard({
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               ACTIVE
             </span>
-          </div>
-
-          <div className="flex items-center justify-between pt-2 mt-2 border-t border-red-900/50">
-            <span className="text-gray-500 flex items-center gap-1.5">
-              <ShieldAlert className="w-3 h-3 text-red-500" /> NUCLEAR OPTION
-            </span>
-            <button
-              onClick={onArmOppenheimer}
-              className="text-[9px] px-2 py-0.5 font-bold bg-red-600 hover:bg-red-500 text-black border border-red-500 rounded uppercase shadow-[0_0_10px_rgba(220,38,38,0.5)] transition-colors tracking-widest"
-            >
-              FRACTURE KEY
-            </button>
           </div>
         </div>
       </div>

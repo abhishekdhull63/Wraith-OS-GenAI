@@ -10,12 +10,11 @@ declare global {
 
 interface UseWhisperProps {
   onLockdown: () => void;
-  onOpenDarkChannel: () => void;
   onWipeMemory: () => void;
   onLog?: (type: 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS', msg: string) => void;
 }
 
-export function useWhisperProtocol({ onLockdown, onOpenDarkChannel, onWipeMemory, onLog }: UseWhisperProps) {
+export function useWhisperProtocol({ onLockdown, onWipeMemory, onLog }: UseWhisperProps) {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
 
@@ -40,8 +39,7 @@ export function useWhisperProtocol({ onLockdown, onOpenDarkChannel, onWipeMemory
         onLog?.('WARNING', '🎙️ VOICE COMMAND: PANIC LOCKDOWN TRIGGERED.');
         onLockdown();
       } else if (transcript.includes('open dark channel')) {
-        onLog?.('SUCCESS', '🎙️ VOICE COMMAND: ROUTING TO DARK CHANNEL.');
-        onOpenDarkChannel();
+        onLog?.('INFO', '🎙️ VOICE COMMAND: Dark Channel is not available in PS-21.');
       } else if (transcript.includes('wipe memory')) {
         onLog?.('ERROR', '🎙️ VOICE COMMAND: EXECUTING FULL DATABASE PURGE.');
         onWipeMemory();
@@ -68,7 +66,7 @@ export function useWhisperProtocol({ onLockdown, onOpenDarkChannel, onWipeMemory
     return () => {
       recognition.stop();
     };
-  }, [isListening, onLockdown, onOpenDarkChannel, onWipeMemory, onLog]);
+  }, [isListening, onLockdown, onWipeMemory, onLog]);
 
   const toggleListening = useCallback(() => {
     if (!recognitionRef.current) {

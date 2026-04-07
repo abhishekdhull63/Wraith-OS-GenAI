@@ -51,13 +51,12 @@ A hidden, CRT-styled overlay Command Line Interface (CLI).
 True peer-to-peer tunneling without a centralized backend:
 - **Dead Drop:** Offline data transfer mechanism using WebRTC protocols. Generates cryptographic Base64 handshakes for manual exchange (e.g., via USB or secure QR).
 - **Encrypted Telemetry Log:** Real-time P2P chat interface routed through WebRTC data channels — all data exists entirely in RAM.
-- **Dark Channel:** Dedicated secure communication overlay for high-priority comms.
 
 ### 🧠 Autonomous & Local Intelligence
 - **Local AI Analysis:** Evaluates intelligence payloads completely on-device using `@mlc-ai/web-llm` (SmolLM2) and TensorFlow, preventing any chance of cloud interception.
 - **Vault Interrogation:** Secure IndexedDB locker for preserving analyzed intelligence, protected by SHA-256 fingerprinting with full-text search.
 - **Shadow Partner:** AI-powered autonomous analysis assistant that runs alongside the operator.
-- **Whisper Protocol:** Voice-activated command system using local speech recognition — supports voice-triggered lockdown, dark channel access, and memory wipe.
+- **Whisper Protocol:** Voice-activated command system using local speech recognition — supports voice-triggered lockdown and memory wipe.
 
 ### 🔐 Cryptographic Evidence Locker (Secure Vault)
 - **IndexedDB-backed evidence preservation** with SHA-256 digital fingerprinting.
@@ -73,9 +72,7 @@ True peer-to-peer tunneling without a centralized backend:
   - **Stage 2:** Full data purge (IndexedDB, localStorage, sessionStorage) if operator remains unresponsive.
 - **Microscopic burn countdown** displayed in the bottom-right corner.
 
-#### Oppenheimer Protocol (Shamir's Secret Sharing)
-- **Horcrux Generator:** Splinters the master encryption key using Shamir's Secret Sharing scheme.
-- **Lazarus Unlock:** Reassembly interface requiring a minimum threshold of key fragments to restore system access.
+
 
 #### Faraday Cage Mode
 - **Active network interface monitoring** — triggers instant lockdown if connectivity is detected during air-gapped operations.
@@ -95,14 +92,11 @@ A deeply engaging "retro-tactical" visual experience:
 - **Animated boot sequence** with system initialization simulation.
 - **Ghost Protocol:** Steganographic message embedding within images.
 - **Secure Sketchpad:** Ephemeral drawing canvas for visual intelligence.
-- **Conspiracy Board:** Interactive pin-and-string evidence mapping tool.
 - **OPSEC Dashboard:** Real-time widget showing motion sensor, Faraday status, and vault encryption state.
 - **Intelligence Briefing:** Quick-overview briefing panel in the header.
 
 ### 🌐 Collaborative Sidebar Tools
 - **New Sketch** — Opens secure ephemeral sketchpad.
-- **Conspiracy Board** — Opens interactive evidence connection mapper.
-- **Dark Channel** — Opens dedicated encrypted comms overlay.
 
 ---
 
@@ -112,7 +106,7 @@ A deeply engaging "retro-tactical" visual experience:
 |-------|-----------|-------|
 | **Framework** | React 19 + TypeScript | Vite 7 bundler |
 | **Styling** | Tailwind CSS v4 | Blueprint JS (`@blueprintjs/core`), Lucide React icons |
-| **Cryptography** | WebCrypto API | SHA-256, PBKDF2, Shamir's Secret Sharing |
+| **Cryptography** | WebCrypto API | SHA-256, PBKDF2, AES-GCM |
 | **P2P Comms** | WebRTC Data Channels | Serverless, RAM-only, encrypted |
 | **Local AI (LLM)** | `@mlc-ai/web-llm` (SmolLM2) | Text analysis, threat classification, chat |
 | **Local AI (STT)** | Whisper (WASM) | Audio transcription, voice command recognition |
@@ -167,7 +161,6 @@ Inside the hidden terminal, type `help` to see operational directives:
 | `clear` | Purge terminal display logs |
 | `arm faraday` | Isolate radio network interfaces |
 | `lockdown --burn` | Execute physical storage destruction (wipes all DBs) |
-| `shatter --key-split` | Splinter Master Encryption Key via Shamir's SSC |
 | `chronos --sync` | Mount live active mesh node telemetry stream |
 
 ### Dashboard Panels (Post-Unlock)
@@ -219,18 +212,14 @@ Wraith-OS-GenAI/
 │   │   ├── DeadDrop.tsx           # WebRTC P2P handshake component
 │   │   ├── TelemetryLog.tsx       # P2P encrypted chat interface
 │   │   ├── GhostProtocol.tsx      # Steganographic message protocol
-│   │   ├── DarkChannel.tsx        # Encrypted communication overlay
 │   │   ├── LogAnalyzer.tsx        # Air-gapped log ingestion & analysis
 │   │   ├── ThreatAnalysisBoard.tsx# Network graph threat visualizer
 │   │   ├── ShadowPartner.tsx      # AI autonomous analysis assistant
-│   │   ├── HorcruxGenerator.tsx   # Shamir's Secret Sharing key splitter
-│   │   ├── LazarusUnlock.tsx      # Key fragment reassembly unlock
 │   │   ├── BurnProtocol.tsx       # Zero-Trust data destruction
 │   │   ├── DeadMansSwitch.tsx     # Autonomous inactivity protection
 │   │   ├── BiometricOverwatch.tsx # Webcam-based operator monitoring
 │   │   ├── OpsecDashboard.tsx     # OPSEC telemetry sidebar widget
 │   │   ├── NetworkStatus.tsx      # Live network/air-gap indicators
-│   │   ├── ConspiracyBoard.tsx    # Evidence pin board
 │   │   ├── SecureSketchpad.tsx    # Ephemeral drawing canvas
 │   │   ├── SecureFileDrop.tsx     # Drag-and-drop file ingestion
 │   │   ├── ChronosRadar.tsx       # Geolocation telemetry HUD
@@ -251,7 +240,7 @@ Wraith-OS-GenAI/
 │   │   ├── useWebLLM.ts           # WebLLM integration wrapper
 │   │   ├── useFaradayMonitor.ts   # Network monitor tripwire
 │   │   ├── usePanicBlur.ts        # Panic screen blur overlay
-│   │   ├── crypto/                # Shamir's SSS, pattern locks
+│   │   ├── crypto/                # AES-GCM encryption, pattern locks
 │   │   ├── acoustic/              # FSK acoustic modem (emitter/receiver)
 │   │   ├── optical/               # QR strobe optical transmitter
 │   │   ├── security/              # Security worker threads

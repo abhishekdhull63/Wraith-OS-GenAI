@@ -68,18 +68,7 @@ export function base64ToBuffer(b64: string): ArrayBuffer {
 async function deriveKey(salt: Uint8Array): Promise<CryptoKey> {
   const encoder = new TextEncoder();
 
-  let baseSecret = MASTER_PASSWORD;
-
-  // OPPENHEIMER OVERRIDE:
-  if (localStorage.getItem('oppenheimer_active') === 'true') {
-    const oppenheimerSeed = sessionStorage.getItem('oppenheimer_seed');
-    if (!oppenheimerSeed) {
-      throw new Error(
-        'OPPENHEIMER LOCKOUT: Master AES Key eradicated from RAM. 3-of-5 Physical Horcrux threshold required for reconstruction.',
-      );
-    }
-    baseSecret = oppenheimerSeed;
-  }
+  const baseSecret = MASTER_PASSWORD;
 
   const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(baseSecret), 'PBKDF2', false, [
     'deriveBits',
