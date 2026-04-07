@@ -26,10 +26,10 @@ export default function WraithHexIcon({ size = 24, className = '' }: WraithHexIc
 
   // --- Chevron geometry ---
   // Two downward-pointing chevrons, tightly stacked below the hexagon
-  const chevHalf = 11;     // half-width of each chevron
-  const chevDepth = 5.5;   // vertical depth of each "V"
-  const chev1Y = 82;       // top chevron start
-  const chev2Y = 92;       // bottom chevron start
+  const chevHalf = 11; // half-width of each chevron
+  const chevDepth = 5.5; // vertical depth of each "V"
+  const chev1Y = 82; // top chevron start
+  const chev2Y = 92; // bottom chevron start
 
   const chev1 = `M${cx - chevHalf},${chev1Y} L${cx},${chev1Y + chevDepth} L${cx + chevHalf},${chev1Y}`;
   const chev2 = `M${cx - chevHalf},${chev2Y} L${cx},${chev2Y + chevDepth} L${cx + chevHalf},${chev2Y}`;
@@ -43,31 +43,14 @@ export default function WraithHexIcon({ size = 24, className = '' }: WraithHexIc
       fill="none"
       stroke="currentColor"
       className={className}
-      aria-label="Deep-Cover"
+      aria-label="Wraith OS"
     >
       {/* Hexagon — pointy-top, sharp joins */}
-      <polygon
-        points={hexPoints}
-        strokeWidth="8"
-        strokeLinejoin="miter"
-        strokeLinecap="square"
-      />
+      <polygon points={hexPoints} strokeWidth="8" strokeLinejoin="miter" strokeLinecap="square" />
       {/* Chevron 1 */}
-      <path
-        d={chev1}
-        strokeWidth="4.5"
-        strokeLinejoin="miter"
-        strokeLinecap="square"
-        fill="none"
-      />
+      <path d={chev1} strokeWidth="4.5" strokeLinejoin="miter" strokeLinecap="square" fill="none" />
       {/* Chevron 2 */}
-      <path
-        d={chev2}
-        strokeWidth="4.5"
-        strokeLinejoin="miter"
-        strokeLinecap="square"
-        fill="none"
-      />
+      <path d={chev2} strokeWidth="4.5" strokeLinejoin="miter" strokeLinecap="square" fill="none" />
     </svg>
   );
 }

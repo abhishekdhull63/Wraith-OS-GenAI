@@ -43,14 +43,24 @@ export default function BurnProtocol() {
     }
 
     // ── Step 2: Clear all browser storage ──────────────────────────────────
-    try { localStorage.clear(); } catch { /* sandboxed */ }
-    try { sessionStorage.clear(); } catch { /* sandboxed */ }
+    try {
+      localStorage.clear();
+    } catch {
+      /* sandboxed */
+    }
+    try {
+      sessionStorage.clear();
+    } catch {
+      /* sandboxed */
+    }
 
     // ── Step 3: Clear any caches ───────────────────────────────────────────
     try {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map((name) => caches.delete(name)));
-    } catch { /* no cache API */ }
+    } catch {
+      /* no cache API */
+    }
 
     // ── Step 4: Animation phase ────────────────────────────────────────────
     setPhase('DONE');
@@ -82,7 +92,7 @@ export default function BurnProtocol() {
         "
       >
         <Flame className="w-4 h-4 group-hover:animate-pulse" />
-        <span className="flex-1 text-left">Burn Protocol</span>
+        <span className="flex-1 text-left">Zero-Trust Lockdown</span>
         <ShieldAlert className="w-3.5 h-3.5 opacity-40" />
       </button>
 
@@ -93,8 +103,8 @@ export default function BurnProtocol() {
           <div className="flex items-start gap-2.5">
             <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
             <p className="text-[11px] text-red-400/80 leading-relaxed">
-              Irreversibly destroys all evidence locker data, browser storage,
-              and cached assets. This action cannot be undone.
+              Irreversibly destroys all evidence locker data, browser storage, and cached assets. This action cannot be
+              undone.
             </p>
           </div>
 
@@ -143,18 +153,14 @@ export default function BurnProtocol() {
               background: isConfirmed
                 ? 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(185,28,28,0.3))'
                 : 'rgba(239,68,68,0.03)',
-              border: isConfirmed
-                ? '1px solid rgba(239,68,68,0.5)'
-                : '1px solid rgba(239,68,68,0.08)',
+              border: isConfirmed ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(239,68,68,0.08)',
               color: isConfirmed ? '#ef4444' : 'rgba(239,68,68,0.2)',
               cursor: isConfirmed ? 'pointer' : 'not-allowed',
-              boxShadow: isConfirmed
-                ? '0 0 30px rgba(239,68,68,0.15), inset 0 0 20px rgba(239,68,68,0.05)'
-                : 'none',
+              boxShadow: isConfirmed ? '0 0 30px rgba(239,68,68,0.15), inset 0 0 20px rgba(239,68,68,0.05)' : 'none',
             }}
           >
             <Flame className="w-4 h-4" />
-            INITIATE BURN
+            INITIATE LOCKDOWN
           </button>
         </div>
       )}
@@ -211,11 +217,9 @@ function BurnOverlay({ phase }: { phase: BurnPhase }) {
           <>
             <Loader2 className="w-16 h-16 text-red-500 animate-spin mx-auto" />
             <div>
-              <p className="text-2xl font-black font-mono text-red-500 tracking-[0.4em] animate-pulse">
-                PURGING DATA
-              </p>
+              <p className="text-2xl font-black font-mono text-red-500 tracking-[0.4em] animate-pulse">ISOLATING SYSTEM</p>
               <p className="text-sm font-mono text-red-400/50 mt-3 tracking-wider">
-                Destroying evidence locker • Clearing storage • Wiping caches
+                System isolated. Local databases wiped to prevent exfiltration.
               </p>
             </div>
           </>
@@ -239,10 +243,10 @@ function BurnOverlay({ phase }: { phase: BurnPhase }) {
                   textShadow: '0 0 30px rgba(239,68,68,0.6), 0 0 60px rgba(239,68,68,0.3)',
                 }}
               >
-                DATA PURGE SUCCESSFUL
+                ZERO-TRUST LOCKDOWN COMPLETE
               </p>
               <p className="text-sm font-mono text-red-400/40 mt-4 tracking-wider">
-                All traces eliminated • Reloading…
+                System isolated. Local databases wiped to prevent exfiltration.
               </p>
             </div>
           </>

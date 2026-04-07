@@ -17,7 +17,7 @@ export default function ShadowPartner({ onLog }: ShadowPartnerProps) {
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    
+
     // Prevent background scrolling while decoy is active
     if (engaged) {
       document.body.style.overflow = 'hidden';
@@ -42,9 +42,30 @@ export default function ShadowPartner({ onLog }: ShadowPartnerProps) {
   // Generate fake spreadsheet rows (stabilized with useMemo)
   const rows = useMemo(() => {
     const generatedRows: React.ReactNode[] = [];
-    const labels = ["Q3 Revenue", "Server Maintenance", "Marketing Q2", "Legal Retainer", "Office Supplies", "Vendor Payout", "Contractor 1", "Travel Exp", "Cloud AWS", "Insurance", "Payroll Tax", "Bonus Pool", "Catered Lunch", "Hardware UP", "Software Lic", "Consulting", "Event Sponsorship", "Utilities", "Recruiting", "Misc Exp"];
-    const statuses = ["Paid", "Pending", "Overdue", "Processing", "Approved"];
-    
+    const labels = [
+      'Q3 Revenue',
+      'Server Maintenance',
+      'Marketing Q2',
+      'Legal Retainer',
+      'Office Supplies',
+      'Vendor Payout',
+      'Contractor 1',
+      'Travel Exp',
+      'Cloud AWS',
+      'Insurance',
+      'Payroll Tax',
+      'Bonus Pool',
+      'Catered Lunch',
+      'Hardware UP',
+      'Software Lic',
+      'Consulting',
+      'Event Sponsorship',
+      'Utilities',
+      'Recruiting',
+      'Misc Exp',
+    ];
+    const statuses = ['Paid', 'Pending', 'Overdue', 'Processing', 'Approved'];
+
     for (let i = 1; i <= 20; i++) {
       const amount = (Math.random() * 50000 + 1000).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
       const status = statuses[i % 5];
@@ -52,21 +73,51 @@ export default function ShadowPartner({ onLog }: ShadowPartnerProps) {
         <tr key={i} className="border-b border-gray-200 hover:bg-gray-50 text-xs">
           <td className="w-8 bg-gray-100 text-center border-r border-gray-300 text-gray-500 font-normal">{i}</td>
           <td className="p-0 border-r border-gray-200">
-            <input type="text" className="w-full h-full bg-transparent outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-500 border-none m-0 px-2 py-1 font-inherit cursor-text" defaultValue={labels[i-1]} onKeyDown={(e) => e.stopPropagation()} spellCheck={false} />
+            <input
+              type="text"
+              className="w-full h-full bg-transparent outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-500 border-none m-0 px-2 py-1 font-inherit cursor-text"
+              defaultValue={labels[i - 1]}
+              onKeyDown={(e) => e.stopPropagation()}
+              spellCheck={false}
+            />
           </td>
           <td className="p-0 border-r border-gray-200 font-mono text-right">
-            <input type="text" className="w-full h-full bg-transparent outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-500 border-none m-0 px-2 py-1 font-inherit cursor-text text-right" defaultValue={amount} onKeyDown={(e) => e.stopPropagation()} spellCheck={false} />
+            <input
+              type="text"
+              className="w-full h-full bg-transparent outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-500 border-none m-0 px-2 py-1 font-inherit cursor-text text-right"
+              defaultValue={amount}
+              onKeyDown={(e) => e.stopPropagation()}
+              spellCheck={false}
+            />
           </td>
           <td className="p-0 border-r border-gray-200">
-            <input type="text" className="w-full h-full bg-transparent outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-500 border-none m-0 px-2 py-1 font-inherit cursor-text" defaultValue={`2026-03-${String((i % 28) + 1).padStart(2, '0')}`} onKeyDown={(e) => e.stopPropagation()} spellCheck={false} />
+            <input
+              type="text"
+              className="w-full h-full bg-transparent outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-500 border-none m-0 px-2 py-1 font-inherit cursor-text"
+              defaultValue={`2026-03-${String((i % 28) + 1).padStart(2, '0')}`}
+              onKeyDown={(e) => e.stopPropagation()}
+              spellCheck={false}
+            />
           </td>
           <td className="p-0 border-r border-gray-200">
-            <input type="text" className={`w-full h-full bg-transparent outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-500 border-none m-0 px-2 py-1 font-inherit cursor-text font-semibold ${status === 'Paid' ? 'text-green-700' : status === 'Overdue' ? 'text-red-700' : 'text-gray-700'}`} defaultValue={status} onKeyDown={(e) => e.stopPropagation()} spellCheck={false} />
+            <input
+              type="text"
+              className={`w-full h-full bg-transparent outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-500 border-none m-0 px-2 py-1 font-inherit cursor-text font-semibold ${status === 'Paid' ? 'text-green-700' : status === 'Overdue' ? 'text-red-700' : 'text-gray-700'}`}
+              defaultValue={status}
+              onKeyDown={(e) => e.stopPropagation()}
+              spellCheck={false}
+            />
           </td>
           <td className="p-0">
-            <input type="text" className="w-full h-full bg-transparent outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-500 border-none m-0 px-2 py-1 font-inherit cursor-text" defaultValue={`INV-${1000 + i}`} onKeyDown={(e) => e.stopPropagation()} spellCheck={false} />
+            <input
+              type="text"
+              className="w-full h-full bg-transparent outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-500 border-none m-0 px-2 py-1 font-inherit cursor-text"
+              defaultValue={`INV-${1000 + i}`}
+              onKeyDown={(e) => e.stopPropagation()}
+              spellCheck={false}
+            />
           </td>
-        </tr>
+        </tr>,
       );
     }
     return generatedRows;
@@ -76,7 +127,7 @@ export default function ShadowPartner({ onLog }: ShadowPartnerProps) {
     <>
       {/* ── FULL SCREEN SPREADSHEET DECOY ── */}
       {engaged && (
-        <div 
+        <div
           className="fixed inset-0 z-[9999] bg-white text-black flex flex-col font-sans select-none overflow-hidden overscroll-none"
           onWheel={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
@@ -85,43 +136,59 @@ export default function ShadowPartner({ onLog }: ShadowPartnerProps) {
           <div className="bg-[#f3f2f1] border-b border-[#e1dfdd] flex flex-col">
             <div className="flex items-center px-4 py-2 gap-4 text-sm">
               <div className="font-semibold text-green-700 flex items-center gap-2">
-                <div className="w-4 h-4 bg-green-600 rounded-sm text-white flex items-center justify-center font-bold text-[10px]">X</div>
+                <div className="w-4 h-4 bg-green-600 rounded-sm text-white flex items-center justify-center font-bold text-[10px]">
+                  X
+                </div>
                 Q3_Financials_Draft.xlsx
               </div>
               <div className="flex gap-4 text-gray-600 ml-4">
                 <span className="hover:bg-gray-200 px-2 py-0.5 rounded cursor-pointer">File</span>
                 <span className="hover:bg-gray-200 px-2 py-0.5 rounded cursor-pointer">Home</span>
-                <span className="hover:bg-gray-200 px-2 py-0.5 rounded cursor-pointer border-b-2 border-green-600 text-black">Insert</span>
+                <span className="hover:bg-gray-200 px-2 py-0.5 rounded cursor-pointer border-b-2 border-green-600 text-black">
+                  Insert
+                </span>
                 <span className="hover:bg-gray-200 px-2 py-0.5 rounded cursor-pointer">Layout</span>
                 <span className="hover:bg-gray-200 px-2 py-0.5 rounded cursor-pointer">Formulas</span>
                 <span className="hover:bg-gray-200 px-2 py-0.5 rounded cursor-pointer">Data</span>
                 <span className="hover:bg-gray-200 px-2 py-0.5 rounded cursor-pointer">Review</span>
               </div>
             </div>
-            
+
             {/* Fake Toolbar */}
             <div className="bg-white border-b border-[#e1dfdd] px-4 py-1.5 flex items-center gap-6 shadow-sm overflow-hidden">
-               <div className="flex gap-1 border-r border-gray-300 pr-4">
-                 <div className="w-8 h-8 rounded hover:bg-gray-100 flex items-center justify-center text-gray-400 font-serif font-bold italic">I</div>
-                 <div className="w-8 h-8 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600 font-bold underline">U</div>
-                 <div className="w-8 h-8 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600 line-through">ab</div>
-               </div>
-               <div className="flex gap-2 items-center border-r border-gray-300 pr-4">
-                 <select className="border border-gray-300 rounded px-2 py-0.5 text-xs bg-white text-gray-700 outline-none"><option>Calibri</option><option>Arial</option></select>
-                 <select className="border border-gray-300 rounded px-1 py-0.5 text-xs bg-white text-gray-700 outline-none"><option>11</option><option>12</option></select>
-               </div>
-               <div className="flex gap-4 text-gray-500 text-xs">
-                 <span>Wrap Text</span>
-                 <span>Merge & Center</span>
-                 <span>$ % ,</span>
-               </div>
+              <div className="flex gap-1 border-r border-gray-300 pr-4">
+                <div className="w-8 h-8 rounded hover:bg-gray-100 flex items-center justify-center text-gray-400 font-serif font-bold italic">
+                  I
+                </div>
+                <div className="w-8 h-8 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600 font-bold underline">
+                  U
+                </div>
+                <div className="w-8 h-8 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600 line-through">
+                  ab
+                </div>
+              </div>
+              <div className="flex gap-2 items-center border-r border-gray-300 pr-4">
+                <select className="border border-gray-300 rounded px-2 py-0.5 text-xs bg-white text-gray-700 outline-none">
+                  <option>Calibri</option>
+                  <option>Arial</option>
+                </select>
+                <select className="border border-gray-300 rounded px-1 py-0.5 text-xs bg-white text-gray-700 outline-none">
+                  <option>11</option>
+                  <option>12</option>
+                </select>
+              </div>
+              <div className="flex gap-4 text-gray-500 text-xs">
+                <span>Wrap Text</span>
+                <span>Merge & Center</span>
+                <span>$ % ,</span>
+              </div>
             </div>
-            
+
             {/* Fake Formula Bar */}
             <div className="flex items-center px-2 py-1 bg-white border-b border-[#e1dfdd] gap-2 text-sm shadow-sm">
-               <div className="w-16 bg-gray-50 border border-gray-300 px-2 text-center text-gray-600">B2</div>
-               <div className="px-2 font-mono text-gray-400">fx</div>
-               <div className="flex-1 bg-white border border-gray-300 px-2 text-gray-700">Server Maintenance</div>
+              <div className="w-16 bg-gray-50 border border-gray-300 px-2 text-center text-gray-600">B2</div>
+              <div className="px-2 font-mono text-gray-400">fx</div>
+              <div className="flex-1 bg-white border border-gray-300 px-2 text-gray-700">Server Maintenance</div>
             </div>
           </div>
 
@@ -142,36 +209,38 @@ export default function ShadowPartner({ onLog }: ShadowPartnerProps) {
               <tbody>
                 {/* Header Row */}
                 <tr className="border-b border-gray-300 font-bold bg-gray-50 text-xs">
-                   <td className="w-8 text-center border-r border-gray-300 text-gray-500 font-normal bg-gray-100">1</td>
-                   <td className="px-2 py-1 border-r border-gray-300">Category</td>
-                   <td className="px-2 py-1 border-r border-gray-300 text-right">Amount</td>
-                   <td className="px-2 py-1 border-r border-gray-300">Date</td>
-                   <td className="px-2 py-1 border-r border-gray-300">Status</td>
-                   <td className="px-2 py-1 border-r border-gray-300">Invoice Ref</td>
-                   <td className="px-2 py-1"></td>
+                  <td className="w-8 text-center border-r border-gray-300 text-gray-500 font-normal bg-gray-100">1</td>
+                  <td className="px-2 py-1 border-r border-gray-300">Category</td>
+                  <td className="px-2 py-1 border-r border-gray-300 text-right">Amount</td>
+                  <td className="px-2 py-1 border-r border-gray-300">Date</td>
+                  <td className="px-2 py-1 border-r border-gray-300">Status</td>
+                  <td className="px-2 py-1 border-r border-gray-300">Invoice Ref</td>
+                  <td className="px-2 py-1"></td>
                 </tr>
                 {/* Data Rows */}
                 {rows}
               </tbody>
             </table>
           </div>
-          
+
           {/* Fake Status Bar */}
           <div className="bg-[#f3f2f1] border-t border-[#e1dfdd] text-[10px] text-gray-500 px-4 py-1 flex justify-between items-center">
-             <div className="flex items-center gap-4">
-                <span>Ready</span>
-                <span className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full"></div> Calculate</span>
-             </div>
-             <div className="flex items-center gap-4">
-                <span>Average: $26,100</span>
-                <span>Count: 20</span>
-                <span>Sum: $522,000</span>
-                <div className="flex gap-1 ml-4 items-center">
-                   <span className="border border-gray-300 rounded px-1">─</span>
-                   <span>100%</span>
-                   <span className="border border-gray-300 rounded px-1">+</span>
-                </div>
-             </div>
+            <div className="flex items-center gap-4">
+              <span>Ready</span>
+              <span className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div> Calculate
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span>Average: $26,100</span>
+              <span>Count: 20</span>
+              <span>Sum: $522,000</span>
+              <div className="flex gap-1 ml-4 items-center">
+                <span className="border border-gray-300 rounded px-1">─</span>
+                <span>100%</span>
+                <span className="border border-gray-300 rounded px-1">+</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

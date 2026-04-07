@@ -6,7 +6,7 @@
  * Features:
  *   1. Encrypted entries list with SHA-256 fingerprints and timestamps
  *   2. "Decrypting…" animation before revealing content
- *   3. Click-to-load: pipes decrypted content back to the Entity Analyzer
+ *   3. Click-to-load: pipes decrypted content back to the Traffic Anomaly Engine
  *   4. Color-coded threat level badges
  */
 
@@ -28,7 +28,7 @@ import {
   Printer,
   Flame,
   Ghost,
-  Compass
+  Compass,
 } from 'lucide-react';
 import { getAllEntries, deleteEntry, logIntruder, decryptVaultContent, saveToLocker, SecureEntry } from '../lib/locker';
 import { useWebLLM } from '../lib/useWebLLM';
@@ -41,7 +41,7 @@ import { useChronosSensors } from '../hooks/useChronosSensors';
 interface SecureVaultProps {
   /** Trigger a refresh (increment to force reload) */
   refreshKey?: number;
-  /** Callback to send decrypted content to the Entity Analyzer */
+  /** Callback to send decrypted content to the Traffic Anomaly Engine */
   onDecryptToAnalyzer?: (content: string) => void;
   /** Callback to log to Intel Stream */
   onLog?: (type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR', message: string) => void;
@@ -51,9 +51,9 @@ interface SecureVaultProps {
 
 const THREAT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   CRITICAL: { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/30' },
-  HIGH:     { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30' },
-  MEDIUM:   { bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/30' },
-  LOW:      { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30' },
+  HIGH: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30' },
+  MEDIUM: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/30' },
+  LOW: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30' },
 };
 
 const TYPE_ICONS: Record<string, typeof FileText> = {
@@ -83,24 +83,46 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
 
   const handleCreateTimeCapsule = async () => {
     if (!tcPayload) return;
-    onLog?.('WARNING', `Initiating Verifiable Delay Function. Encrypting payload behind ${tcDelay.toLocaleString()} SHA-256 cycles...`);
+    onLog?.(
+      'WARNING',
+      `Initiating Verifiable Delay Function. Encrypting payload behind ${tcDelay.toLocaleString()} SHA-256 cycles...`,
+    );
     const seed = crypto.getRandomValues(new Uint8Array(16));
-    const seedStr = Array.from(seed).map(b => b.toString(16).padStart(2, '0')).join('');
-    
-    let lat = undefined, lng = undefined, hdg = undefined;
+    const seedStr = Array.from(seed)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    let lat = undefined,
+      lng = undefined,
+      hdg = undefined;
     if (tcChronosBind) {
-       if (chronosSensors.lat === null || chronosSensors.heading === null) {
-          onLog?.('ERROR', 'Cannot bind Chronos Lock: Hardware Sensor Arrays inactive or unauthorized.');
-          return;
-       }
-       lat = chronosSensors.lat;
-       lng = chronosSensors.lng;
-       hdg = chronosSensors.heading;
-       onLog?.('WARNING', `CHRONOS LOCK ENGAGED: Payload physically bounds to LAT:${lat.toFixed(4)} LNG:${lng?.toFixed(4)} HDG:${Math.round(hdg/5)*5}°`);
+      if (chronosSensors.lat === null || chronosSensors.heading === null) {
+        onLog?.('ERROR', 'Cannot bind Chronos Lock: Hardware Sensor Arrays inactive or unauthorized.');
+        return;
+      }
+      lat = chronosSensors.lat;
+      lng = chronosSensors.lng;
+      hdg = chronosSensors.heading;
+      onLog?.(
+        'WARNING',
+        `CHRONOS LOCK ENGAGED: Payload physically bounds to LAT:${lat.toFixed(4)} LNG:${lng?.toFixed(4)} HDG:${Math.round(hdg / 5) * 5}°`,
+      );
     }
-    
-    await saveToLocker(tcPayload, 'TEXT', 'CRITICAL', 'Temporal Capsule (VDF Locked)', false, false, tcDelay, seedStr, lat ?? undefined, lng ?? undefined, hdg ?? undefined);
-    
+
+    await saveToLocker(
+      tcPayload,
+      'TEXT',
+      'CRITICAL',
+      'Temporal Capsule (VDF Locked)',
+      false,
+      false,
+      tcDelay,
+      seedStr,
+      lat ?? undefined,
+      lng ?? undefined,
+      hdg ?? undefined,
+    );
+
     setTcPayload('');
     setShowTimeCapsuleForm(false);
     onLog?.('SUCCESS', 'Temporal Capsule mathematically locked onto disk.');
@@ -112,26 +134,32 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
   const [summaryTargetId, setSummaryTargetId] = useState<string | null>(null);
   const [summaryStream, setSummaryStream] = useState<string>('');
 
-  const handleGenerateSummary = useCallback(async (entry: SecureEntry, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!engine) {
-      onLog?.('INFO', 'Initializing WebGPU Core. Resolving Llama-3-8B weights...');
-      await initEngine();
-      return;
-    }
-    setSummaryTargetId(entry.id);
-    setSummaryStream('');
-    onLog?.('INFO', 'Routing payload strictly through Local WebGPU Instance...');
-    try {
-      await generate(`Read this intercepted file. Summarize it in 2 sentences. Note severe threats:\n\n${entry.content}`, (text) => {
-        setSummaryStream(text);
-      });
-      onLog?.('SUCCESS', 'WebGPU Llama Inference Terminated.');
-    } catch (err: any) {
-      onLog?.('ERROR', `WebGPU Collapse: ${err.message}`);
-      setSummaryTargetId(null);
-    }
-  }, [engine, initEngine, generate, onLog]);
+  const handleGenerateSummary = useCallback(
+    async (entry: SecureEntry, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!engine) {
+        onLog?.('INFO', 'Initializing WebGPU Core. Resolving Llama-3-8B weights...');
+        await initEngine();
+        return;
+      }
+      setSummaryTargetId(entry.id);
+      setSummaryStream('');
+      onLog?.('INFO', 'Routing payload strictly through Local WebGPU Instance...');
+      try {
+        await generate(
+          `Read this intercepted file. Summarize it in 2 sentences. Note severe threats:\n\n${entry.content}`,
+          (text) => {
+            setSummaryStream(text);
+          },
+        );
+        onLog?.('SUCCESS', 'WebGPU Llama Inference Terminated.');
+      } catch (err: any) {
+        onLog?.('ERROR', `WebGPU Collapse: ${err.message}`);
+        setSummaryTargetId(null);
+      }
+    },
+    [engine, initEngine, generate, onLog],
+  );
 
   // ── BURN-ON-READ TIMERS ──
   const [shredTargets, setShredTargets] = useState<Record<string, number>>({});
@@ -140,7 +168,7 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         const next: Record<string, number> = {};
         Object.entries(shredTargets).forEach(([id, targetTime]) => {
           const remaining = Math.max(0, targetTime - now);
@@ -149,14 +177,17 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
           if (remaining === 0 && prev[id] !== 0) {
             // TIME'S UP - Shred Data
             deleteEntry(id).then(() => {
-              setEntries(curr => curr.filter(e => e.id !== id));
-              setExpandedId(currId => currId === id ? null : currId);
-              setShredTargets(targets => {
+              setEntries((curr) => curr.filter((e) => e.id !== id));
+              setExpandedId((currId) => (currId === id ? null : currId));
+              setShredTargets((targets) => {
                 const newTargets = { ...targets };
                 delete newTargets[id];
                 return newTargets;
               });
-              onLog?.('ERROR', `🔥 SHREDDED: Burn-on-Read protocol engaged for Evidence ID [${id.split('-')[0]}]. Payload purged.`);
+              onLog?.(
+                'ERROR',
+                `🔥 SHREDDED: Burn-on-Read protocol engaged for Evidence ID [${id.split('-')[0]}]. Payload purged.`,
+              );
             });
           }
         });
@@ -173,8 +204,8 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
     try {
       const all = await getAllEntries();
       setEntries(all);
-    } catch (err) {
-      console.error('[SecureVault] Failed to load entries:', err);
+    } catch {
+      /* Failed to load vault entries */
     } finally {
       setIsLoading(false);
     }
@@ -204,74 +235,84 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
           const video = document.createElement('video');
           video.srcObject = stream;
           await video.play();
-          
+
           const canvas = document.createElement('canvas');
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
           canvas.getContext('2d')?.drawImage(video, 0, 0);
-          
+
           const photoBase64 = canvas.toDataURL('image/jpeg', 0.8);
           await logIntruder(photoBase64);
-          
-          stream.getTracks().forEach(t => t.stop());
-        } catch (e) {
-          console.error('Honeytoken camera capture failed or denied.', e);
+
+          stream.getTracks().forEach((t) => t.stop());
+        } catch {
+          /* Honeytoken camera capture failed or denied */
         }
 
         // Trigger Panic Blur globally (mimicking 3x Escape)
         for (let i = 0; i < 3; i++) {
           window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
         }
-        
+
         setDecryptingId(null);
         return; // HALT EXECUTION
       }
 
       // ── CHRONOS LOCK INTERCEPT ──
       if (entry.chronosLat !== undefined && entry.chronosLng !== undefined && entry.chronosHeading !== undefined) {
-         setChronosTarget(entry);
-         return; // Suspend decryption process until Chronos array is satisfied visually
+        setChronosTarget(entry);
+        return; // Suspend decryption process until Chronos array is satisfied visually
       }
 
       await executeDecryption(entry);
     },
-    [expandedId, onLog]
+    [expandedId, onLog],
   );
 
   const executeDecryption = async (entry: SecureEntry, activeSensors?: typeof chronosSensors) => {
-      setDecryptingId(entry.id);
-      
-      const vdfConfig = entry.vdfIterations && entry.vdfSeed 
-          ? { iterations: entry.vdfIterations, seedStr: entry.vdfSeed }
-          : undefined;
+    setDecryptingId(entry.id);
 
-      const cParams = entry.chronosLat !== undefined && activeSensors !== undefined && activeSensors.lat !== null && activeSensors.lng !== null && activeSensors.heading !== null
-          ? { lat: activeSensors.lat, lng: activeSensors.lng, heading: activeSensors.heading }
-          : undefined;
+    const vdfConfig =
+      entry.vdfIterations && entry.vdfSeed ? { iterations: entry.vdfIterations, seedStr: entry.vdfSeed } : undefined;
 
-      const plainContent = await decryptVaultContent(
-          entry.content, entry.iv, entry.salt, vdfConfig, 
-          (pct) => setVdfProgress(p => ({ ...p, [entry.id]: pct })),
-          cParams
+    const cParams =
+      entry.chronosLat !== undefined &&
+      activeSensors !== undefined &&
+      activeSensors.lat !== null &&
+      activeSensors.lng !== null &&
+      activeSensors.heading !== null
+        ? { lat: activeSensors.lat, lng: activeSensors.lng, heading: activeSensors.heading }
+        : undefined;
+
+    const plainContent = await decryptVaultContent(
+      entry.content,
+      entry.iv,
+      entry.salt,
+      vdfConfig,
+      (pct) => setVdfProgress((p) => ({ ...p, [entry.id]: pct })),
+      cParams,
+    );
+
+    if (plainContent.startsWith('[[ ENCRYPTION ERROR')) {
+      onLog?.(
+        'ERROR',
+        `Decryption failed for Evidence ${entry.id}. Keys, Timers, or Planetary bonds mathematically rejected.`,
       );
-
-      if (plainContent.startsWith('[[ ENCRYPTION ERROR')) {
-        onLog?.('ERROR', `Decryption failed for Evidence ${entry.id}. Keys, Timers, or Planetary bonds mathematically rejected.`);
-        setDecryptingId(null);
-        return;
-      }
-      
-      setEntries(curr => curr.map(e => e.id === entry.id ? { ...e, content: plainContent } : e));
-      setExpandedId(entry.id);
       setDecryptingId(null);
-      
-      // Arm Burn-on-Read Timer (e.g. 30 seconds to self destruct)
-      if (entry.burnOnRead && !shredTargets[entry.id]) {
-         onLog?.('WARNING', `File ${entry.id} is BURN-ON-READ. Terminating local persistence arrays in 300 seconds.`);
-         setShredTargets(prev => ({ ...prev, [entry.id]: Date.now() + 300000 }));
-      }
-      
-      onLog?.('SUCCESS', `✅ Evidence ${entry.id} decrypted — integrity verified`);
+      return;
+    }
+
+    setEntries((curr) => curr.map((e) => (e.id === entry.id ? { ...e, content: plainContent } : e)));
+    setExpandedId(entry.id);
+    setDecryptingId(null);
+
+    // Arm Burn-on-Read Timer (e.g. 30 seconds to self destruct)
+    if (entry.burnOnRead && !shredTargets[entry.id]) {
+      onLog?.('WARNING', `File ${entry.id} is BURN-ON-READ. Terminating local persistence arrays in 300 seconds.`);
+      setShredTargets((prev) => ({ ...prev, [entry.id]: Date.now() + 300000 }));
+    }
+
+    onLog?.('SUCCESS', `✅ Evidence ${entry.id} decrypted — integrity verified`);
   };
 
   // ── Delete Entry ──────────────────────────────────────────────────────────
@@ -293,50 +334,56 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
     (entry: SecureEntry, e: React.MouseEvent) => {
       e.stopPropagation();
       onDecryptToAnalyzer?.(entry.content);
-      onLog?.('INFO', '📋 Evidence loaded into Entity Analyzer');
+      onLog?.('INFO', '📋 Evidence loaded into Traffic Anomaly Engine');
     },
     [onDecryptToAnalyzer, onLog],
   );
 
   // ── Ghost Protocol (Steganography Exfiltration/Extraction) ──────────────
 
-  const handleExfiltrateImage = useCallback((content: string) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/png, image/jpeg';
-    input.onchange = (e: any) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      onLog?.('INFO', '👻 Steganography matrix engaged. Mounting decoy vector...');
-      const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.drawImage(img, 0, 0);
-        let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        try {
-          imgData = encodeIntelToImage(imgData, content);
-          ctx.putImageData(imgData, 0, 0);
-          canvas.toBlob((blob) => {
-            if (!blob) return;
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `classified_carrier_${Date.now()}.png`;
-            link.click();
-            onLog?.('SUCCESS', '👻 Ghost Protocol Active. Encrypted Payload mechanically woven into image LSB arrays.');
-          }, 'image/png');
-        } catch(err: any) {
-          onLog?.('ERROR', `Steganography Overflow: ${err.message}`);
-        }
+  const handleExfiltrateImage = useCallback(
+    (content: string) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/png, image/jpeg';
+      input.onchange = (e: any) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        onLog?.('INFO', '👻 Steganography matrix engaged. Mounting decoy vector...');
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          ctx.drawImage(img, 0, 0);
+          let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          try {
+            imgData = encodeIntelToImage(imgData, content);
+            ctx.putImageData(imgData, 0, 0);
+            canvas.toBlob((blob) => {
+              if (!blob) return;
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = `classified_carrier_${Date.now()}.png`;
+              link.click();
+              onLog?.(
+                'SUCCESS',
+                '👻 Ghost Protocol Active. Encrypted Payload mechanically woven into image LSB arrays.',
+              );
+            }, 'image/png');
+          } catch (err: any) {
+            onLog?.('ERROR', `Steganography Overflow: ${err.message}`);
+          }
+        };
+        img.src = url;
       };
-      img.src = url;
-    };
-    input.click();
-  }, [onLog]);
+      input.click();
+    },
+    [onLog],
+  );
 
   const handleExtractImage = useCallback(() => {
     const input = document.createElement('input');
@@ -359,7 +406,7 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
         const secret = decodeIntelFromImage(imgData);
         if (secret) {
           onDecryptToAnalyzer?.(secret);
-          onLog?.('SUCCESS', '👻 Payload extracted. Decoded string piped directly to Entity Analyzer.');
+          onLog?.('SUCCESS', '👻 Payload extracted. Decoded string piped directly to Traffic Anomaly Engine.');
         } else {
           onLog?.('ERROR', 'No Ghost Protocol signature detected in image LSB channels.');
         }
@@ -374,17 +421,17 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
   return (
     <section className="glass-card p-6 space-y-5 relative">
       {chronosTarget && (
-         <ChronosRadar 
-            sensors={chronosSensors}
-            targetLat={chronosTarget.chronosLat as number}
-            targetLng={chronosTarget.chronosLng as number}
-            targetHeading={chronosTarget.chronosHeading as number}
-            onUnlock={() => {
-               executeDecryption(chronosTarget, chronosSensors);
-               setChronosTarget(null);
-            }}
-            onCancel={() => setChronosTarget(null)}
-         />
+        <ChronosRadar
+          sensors={chronosSensors}
+          targetLat={chronosTarget.chronosLat as number}
+          targetLng={chronosTarget.chronosLng as number}
+          targetHeading={chronosTarget.chronosHeading as number}
+          onUnlock={() => {
+            executeDecryption(chronosTarget, chronosSensors);
+            setChronosTarget(null);
+          }}
+          onCancel={() => setChronosTarget(null)}
+        />
       )}
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -393,27 +440,23 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
             <Shield className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-100">
-              Secure Vault
-            </h3>
-            <p className="text-xs text-gray-500">
-              Cryptographic Evidence Locker · IndexedDB Encrypted
-            </p>
+            <h3 className="text-lg font-bold text-gray-100">Secure Vault</h3>
+            <p className="text-xs text-gray-500">Cryptographic Evidence Locker · IndexedDB Encrypted</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button 
-             onClick={() => setShowTimeCapsuleForm(!showTimeCapsuleForm)}
-             className={`mr-2 px-3 py-1 flex items-center gap-1.5 text-xs font-mono font-bold border rounded transition-colors ${showTimeCapsuleForm ? 'bg-amber-500/20 text-amber-400 border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.2)]' : 'bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700 hover:text-gray-300'}`}
+          <button
+            onClick={() => setShowTimeCapsuleForm(!showTimeCapsuleForm)}
+            className={`mr-2 px-3 py-1 flex items-center gap-1.5 text-xs font-mono font-bold border rounded transition-colors ${showTimeCapsuleForm ? 'bg-amber-500/20 text-amber-400 border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.2)]' : 'bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700 hover:text-gray-300'}`}
           >
-             <Clock className="w-3.5 h-3.5" /> CREATE TIME CAPSULE
+            <Clock className="w-3.5 h-3.5" /> CREATE TIME CAPSULE
           </button>
-          <button 
-             onClick={handleExtractImage}
-             className="mr-3 px-3 py-1 flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 rounded shadow-[0_0_10px_rgba(16,185,129,0.2)] transition-colors"
+          <button
+            onClick={handleExtractImage}
+            className="mr-3 px-3 py-1 flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 rounded shadow-[0_0_10px_rgba(16,185,129,0.2)] transition-colors"
           >
-             <Ghost className="w-3.5 h-3.5" /> EXTRACT VIA IMAGE
+            <Ghost className="w-3.5 h-3.5" /> EXTRACT VIA IMAGE
           </button>
           <span className="px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 rounded-full border border-emerald-500/20">
             {entries.length} {entries.length === 1 ? 'ENTRY' : 'ENTRIES'}
@@ -424,55 +467,67 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
       {showTimeCapsuleForm && (
         <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-4 space-y-3 animate-fade-in">
           <div className="flex items-start gap-3">
-             <Clock className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-             <div className="flex-1">
-                <h4 className="text-sm font-bold text-amber-400 tracking-wide font-mono uppercase mb-1">Temporal VDF Vault</h4>
-                <p className="text-xs text-amber-500/70 mb-3">Force decryptors to run millions of sequential SHA-256 hashes, creating un-bypassable physical time delays to unlock payloads.</p>
-                
-                <textarea 
-                  value={tcPayload}
-                  onChange={(e) => setTcPayload(e.target.value)}
-                  placeholder="Enter classified payload to time-lock..."
-                  className="w-full h-24 bg-black/50 border border-amber-500/20 rounded-lg p-3 text-amber-100 font-mono text-xs focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-500/50 placeholder-amber-500/30 mb-3 resize-none"
-                />
+            <Clock className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-sm font-bold text-amber-400 tracking-wide font-mono uppercase mb-1">
+                Temporal VDF Vault
+              </h4>
+              <p className="text-xs text-amber-500/70 mb-3">
+                Force decryptors to run millions of sequential SHA-256 hashes, creating un-bypassable physical time
+                delays to unlock payloads.
+              </p>
 
-                <div className="flex items-center justify-between text-xs font-mono text-amber-400 mb-1">
-                   <span>Set Delay Cycles</span>
-                   <span className="font-bold">{tcDelay.toLocaleString()} Hashes</span>
-                </div>
-                <input 
-                  type="range" min="50000" max="5000000" step="50000"
-                  value={tcDelay} onChange={(e) => setTcDelay(parseInt(e.target.value))}
-                  className="w-full accent-amber-500 cursor-pointer mb-3"
-                />
-                <div className="flex justify-between text-[10px] font-mono text-amber-500/50 mb-4">
-                   <span>~10 Mins (50,000)</span>
-                   <span>~1 Hour (300,000)</span>
-                   <span>~12 Hours (5,000,000)</span>
-                </div>
+              <textarea
+                value={tcPayload}
+                onChange={(e) => setTcPayload(e.target.value)}
+                placeholder="Enter classified payload to time-lock..."
+                className="w-full h-24 bg-black/50 border border-amber-500/20 rounded-lg p-3 text-amber-100 font-mono text-xs focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-500/50 placeholder-amber-500/30 mb-3 resize-none"
+              />
 
-                <div className="flex items-center gap-2 mb-4 bg-black/30 p-2 rounded border border-amber-500/10">
-                   <div 
-                      onClick={() => setTcChronosBind(!tcChronosBind)}
-                      className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${tcChronosBind ? 'bg-amber-500 border-amber-400 text-black' : 'bg-black border-amber-500/30'}`}
-                   >
-                     {tcChronosBind && <Compass className="w-3 h-3" />}
-                   </div>
-                   <span className="text-[10px] text-amber-500/70 uppercase tracking-widest font-mono cursor-pointer select-none" onClick={() => setTcChronosBind(!tcChronosBind)}>
-                      Bind Magnetic Signature (Current Location & Heading)
-                   </span>
-                </div>
+              <div className="flex items-center justify-between text-xs font-mono text-amber-400 mb-1">
+                <span>Set Delay Cycles</span>
+                <span className="font-bold">{tcDelay.toLocaleString()} Hashes</span>
+              </div>
+              <input
+                type="range"
+                min="50000"
+                max="5000000"
+                step="50000"
+                value={tcDelay}
+                onChange={(e) => setTcDelay(parseInt(e.target.value))}
+                className="w-full accent-amber-500 cursor-pointer mb-3"
+              />
+              <div className="flex justify-between text-[10px] font-mono text-amber-500/50 mb-4">
+                <span>~10 Mins (50,000)</span>
+                <span>~1 Hour (300,000)</span>
+                <span>~12 Hours (5,000,000)</span>
+              </div>
 
-                <div className="flex justify-end">
-                   <button 
-                     onClick={handleCreateTimeCapsule}
-                     disabled={!tcPayload}
-                     className="px-4 py-1.5 bg-amber-500 text-black font-bold font-mono text-xs uppercase tracking-wider rounded hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                   >
-                     Engage Temporal Lock
-                   </button>
+              <div className="flex items-center gap-2 mb-4 bg-black/30 p-2 rounded border border-amber-500/10">
+                <div
+                  onClick={() => setTcChronosBind(!tcChronosBind)}
+                  className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${tcChronosBind ? 'bg-amber-500 border-amber-400 text-black' : 'bg-black border-amber-500/30'}`}
+                >
+                  {tcChronosBind && <Compass className="w-3 h-3" />}
                 </div>
-             </div>
+                <span
+                  className="text-[10px] text-amber-500/70 uppercase tracking-widest font-mono cursor-pointer select-none"
+                  onClick={() => setTcChronosBind(!tcChronosBind)}
+                >
+                  Bind Magnetic Signature (Current Location & Heading)
+                </span>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={handleCreateTimeCapsule}
+                  disabled={!tcPayload}
+                  className="px-4 py-1.5 bg-amber-500 text-black font-bold font-mono text-xs uppercase tracking-wider rounded hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Engage Temporal Lock
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -489,12 +544,8 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
             <Lock className="w-10 h-10 text-gray-600" />
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium text-gray-400">
-              Vault Empty
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              High-threat intelligence will be auto-preserved here
-            </p>
+            <p className="text-sm font-medium text-gray-400">Vault Empty</p>
+            <p className="text-xs text-gray-600 mt-1">High-threat intelligence will be auto-preserved here</p>
           </div>
         </div>
       ) : (
@@ -512,9 +563,10 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
                   onClick={() => handleDecrypt(entry)}
                   className={`
                     w-full text-left rounded-xl border transition-all duration-300 cursor-pointer
-                    ${isExpanded
-                      ? 'bg-white/[0.04] border-emerald-500/30'
-                      : 'bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.03]'
+                    ${
+                      isExpanded
+                        ? 'bg-white/[0.04] border-emerald-500/30'
+                        : 'bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.03]'
                     }
                   `}
                 >
@@ -535,9 +587,7 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <TypeIcon className="w-3.5 h-3.5 text-gray-500" />
-                            <span className="text-sm font-semibold text-gray-200 truncate">
-                              {entry.label}
-                            </span>
+                            <span className="text-sm font-semibold text-gray-200 truncate">{entry.label}</span>
                           </div>
 
                           {/* Hash + Timestamp */}
@@ -557,10 +607,12 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
                       {/* Right Side: Threat Badge + Actions */}
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {/* Threat Level */}
-                        <span className={`
+                        <span
+                          className={`
                           px-2 py-0.5 text-[10px] font-mono font-bold rounded-full border
                           ${threat.bg} ${threat.text} ${threat.border}
-                        `}>
+                        `}
+                        >
                           {entry.threat_level}
                         </span>
 
@@ -574,14 +626,19 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
 
                         {/* Honeytoken Trap Indicator */}
                         {entry.isHoneytoken && (
-                          <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400" title="Armed Honeytoken Trap">
+                          <div
+                            className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400"
+                            title="Armed Honeytoken Trap"
+                          >
                             <Ghost className="w-3.5 h-3.5" />
                           </div>
                         )}
 
                         {/* Burn Icon Indicator */}
                         {entry.burnOnRead && (
-                          <div className={`p-1.5 rounded-lg ${shredTargets[entry.id] ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-orange-500/10 text-orange-400'}`}>
+                          <div
+                            className={`p-1.5 rounded-lg ${shredTargets[entry.id] ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-orange-500/10 text-orange-400'}`}
+                          >
                             <Flame className="w-3.5 h-3.5" />
                           </div>
                         )}
@@ -608,16 +665,24 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
                     {/* VDF Cracking Progress Bar */}
                     {vdfProgress[entry.id] !== undefined && (
                       <div className="mt-3 p-3 flex flex-col gap-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                         <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-mono font-bold tracking-widest text-amber-400 animate-pulse flex items-center gap-2">
-                               <Clock className="w-3.5 h-3.5" /> CRACKING TEMPORAL LOCK (VDF)
-                            </span>
-                            <span className="text-xs font-mono font-bold text-amber-500">{Math.round(vdfProgress[entry.id])}%</span>
-                         </div>
-                         <div className="h-1.5 w-full bg-black/50 rounded-full overflow-hidden border border-amber-500/20">
-                            <div className="h-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)] transition-all duration-200" style={{ width: `${Math.max(1, vdfProgress[entry.id])}%` }} />
-                         </div>
-                         <div className="text-[8px] text-amber-500/50 font-mono uppercase">Re-deriving AES-GCM Key... {(entry.vdfIterations || 0).toLocaleString()} SHA-256 primitives queued.</div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-mono font-bold tracking-widest text-amber-400 animate-pulse flex items-center gap-2">
+                            <Clock className="w-3.5 h-3.5" /> CRACKING TEMPORAL LOCK (VDF)
+                          </span>
+                          <span className="text-xs font-mono font-bold text-amber-500">
+                            {Math.round(vdfProgress[entry.id])}%
+                          </span>
+                        </div>
+                        <div className="h-1.5 w-full bg-black/50 rounded-full overflow-hidden border border-amber-500/20">
+                          <div
+                            className="h-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)] transition-all duration-200"
+                            style={{ width: `${Math.max(1, vdfProgress[entry.id])}%` }}
+                          />
+                        </div>
+                        <div className="text-[8px] text-amber-500/50 font-mono uppercase">
+                          Re-deriving AES-GCM Key... {(entry.vdfIterations || 0).toLocaleString()} SHA-256 primitives
+                          queued.
+                        </div>
                       </div>
                     )}
                   </div>
@@ -626,18 +691,19 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
                 {/* Expanded Content */}
                 {isExpanded && (
                   <div className="mt-1 p-4 rounded-b-xl bg-black/40 border border-t-0 border-emerald-500/10 animate-slide-up">
-                    
                     {/* Hidden Printable Dossier (Only visible during print) */}
                     <div className="hidden print:block print:absolute print:bg-white print:text-black print:font-mono print:border-[12px] print:border-double print:border-black print:z-[9999] min-h-[1056px]">
                       <div className="border-b-4 border-black pb-6 mb-8 text-center pt-12">
-                        <h1 className="text-4xl font-black tracking-widest uppercase mb-2">DECLASSIFIED // EYES ONLY</h1>
+                        <h1 className="text-4xl font-black tracking-widest uppercase mb-2">
+                          DECLASSIFIED // EYES ONLY
+                        </h1>
                         <h2 className="text-2xl font-bold uppercase">THREAT LEVEL: {entry.threat_level}</h2>
                         <div className="mt-4 text-sm flex justify-between px-16 font-semibold">
                           <span>DATE: {new Date(entry.timestamp).toLocaleString()}</span>
                           <span>ID: {entry.id.split('-')[0]}</span>
                         </div>
                       </div>
-                      
+
                       <div className="text-lg leading-relaxed whitespace-pre-wrap px-16 pb-40 font-medium">
                         {entry.content}
                       </div>
@@ -656,11 +722,14 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
                           INTEGRITY VERIFIED — SHA-256: {entry.digital_fingerprint.slice(0, 32)}…
                         </span>
                       </div>
-                      
+
                       {entry.burnOnRead && timeLeft[entry.id] !== undefined && (
                         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-mono font-bold animate-pulse">
                           <Flame className="w-3 h-3" />
-                          SHRED IN: {Math.floor(timeLeft[entry.id] / 60000)}:{(Math.floor((timeLeft[entry.id] % 60000) / 1000)).toString().padStart(2, '0')}
+                          SHRED IN: {Math.floor(timeLeft[entry.id] / 60000)}:
+                          {Math.floor((timeLeft[entry.id] % 60000) / 1000)
+                            .toString()
+                            .padStart(2, '0')}
                         </div>
                       )}
                     </div>
@@ -701,7 +770,9 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
                           "
                         >
                           <Zap className="w-3 h-3" />
-                          {isInitializing && progress ? `Booting Llama3 (${Math.round(progress.progress * 100)}%)` : 'Init WebGPU AI'}
+                          {isInitializing && progress
+                            ? `Booting Llama3 (${Math.round(progress.progress * 100)}%)`
+                            : 'Init WebGPU AI'}
                         </button>
                       ) : (
                         <button
@@ -717,7 +788,7 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
                           Llama-3 Summary
                         </button>
                       )}
-                      
+
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -755,7 +826,9 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
                     {/* Show WebGPU Summary Box if active */}
                     {summaryTargetId === entry.id && summaryStream && (
                       <div className="mt-3 p-3 bg-[#0a0510] border border-purple-500/20 rounded-lg text-xs font-mono text-purple-300 leading-relaxed shadow-[inset_0_0_20px_rgba(168,85,247,0.05)]">
-                        <div className="mb-2 uppercase text-[9px] tracking-widest text-purple-500 font-bold border-b border-purple-500/20 pb-1">WebGPU Edge Inference (Llama-3-8B)</div>
+                        <div className="mb-2 uppercase text-[9px] tracking-widest text-purple-500 font-bold border-b border-purple-500/20 pb-1">
+                          WebGPU Edge Inference (Llama-3-8B)
+                        </div>
                         {summaryStream}
                       </div>
                     )}
@@ -771,8 +844,8 @@ export default function SecureVault({ refreshKey, onDecryptToAnalyzer, onLog }: 
       <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
         <Lock className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-gray-500 leading-relaxed">
-          Evidence is encrypted at rest in IndexedDB with SHA-256 digital fingerprints.
-          Data never leaves this device. Tamper-evident chain of custody preserved locally.
+          Evidence is encrypted at rest in IndexedDB with SHA-256 digital fingerprints. Data never leaves this device.
+          Tamper-evident chain of custody preserved locally.
         </p>
       </div>
     </section>

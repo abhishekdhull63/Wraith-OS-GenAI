@@ -15,8 +15,8 @@ export function useKioskMode() {
       } else if ((document.documentElement as any).msRequestFullscreen) {
         await (document.documentElement as any).msRequestFullscreen();
       }
-    } catch (err) {
-      console.error('[Kiosk Mode] Failed to acquire fullscreen lock. Device may block autonomous fullscreen expansions.', err);
+    } catch {
+      /* Fullscreen request denied or unavailable */
     }
   }, []);
 

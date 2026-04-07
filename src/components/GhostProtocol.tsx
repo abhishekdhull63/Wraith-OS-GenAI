@@ -28,15 +28,15 @@ export default function GhostProtocol({ onLog }: GhostProtocolProps) {
     const encoder = new TextEncoder();
     const bytes = encoder.encode(text);
     const bitLen = bytes.length * 8;
-    
+
     // Total bits = 32 (length header) + data bits
     const bits = new Uint8Array(32 + bitLen);
-    
+
     // Write 32-bit length header (big-endian)
     for (let i = 0; i < 32; i++) {
       bits[i] = (bytes.length >> (31 - i)) & 1;
     }
-    
+
     // Write data bits
     let offset = 32;
     for (let i = 0; i < bytes.length; i++) {
@@ -44,7 +44,7 @@ export default function GhostProtocol({ onLog }: GhostProtocolProps) {
         bits[offset++] = (bytes[i] >> j) & 1;
       }
     }
-    
+
     return bits;
   };
 
@@ -62,13 +62,13 @@ export default function GhostProtocol({ onLog }: GhostProtocolProps) {
     reader.onload = (event) => {
       if (typeof event.target?.result === 'string') {
         if (type === 'encode') {
-           setCoverImage(event.target.result);
-           setInjectedImage(null);
-           onLog?.('INFO', `Ghost Protocol cover image acquired: ${file.name}`);
+          setCoverImage(event.target.result);
+          setInjectedImage(null);
+          onLog?.('INFO', `Ghost Protocol cover image acquired: ${file.name}`);
         } else {
-           setDecodeImage(event.target.result);
-           setDecodedJSON('');
-           onLog?.('INFO', `Ghost Protocol decoding subject acquired: ${file.name}`);
+          setDecodeImage(event.target.result);
+          setDecodedJSON('');
+          onLog?.('INFO', `Ghost Protocol decoding subject acquired: ${file.name}`);
         }
       }
     };
@@ -87,14 +87,16 @@ export default function GhostProtocol({ onLog }: GhostProtocolProps) {
       // 2. Load Image to Canvas
       const img = new Image();
       img.src = coverImage;
-      await new Promise((resolve) => { img.onload = resolve; });
+      await new Promise((resolve) => {
+        img.onload = resolve;
+      });
 
       const canvas = canvasRef.current;
       if (!canvas) throw new Error('Canvas not found');
-      
+
       canvas.width = img.width;
       canvas.height = img.height;
-      
+
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Canvas Context not found');
 
@@ -129,11 +131,10 @@ export default function GhostProtocol({ onLog }: GhostProtocolProps) {
       }
 
       ctx.putImageData(imageData, 0, 0);
-      
+
       // 5. Generate Output Image (MUST be PNG to preserve LSBs)
       setInjectedImage(canvas.toDataURL('image/png'));
       onLog?.('SUCCESS', `✅ LSB Injection successful. Payload size: ${payloadBits.length} bits.`);
-      
     } catch (err: any) {
       onLog?.('ERROR', `Injection failed: ${err.message}`);
     } finally {
@@ -150,14 +151,16 @@ export default function GhostProtocol({ onLog }: GhostProtocolProps) {
     try {
       const img = new Image();
       img.src = decodeImage;
-      await new Promise((resolve) => { img.onload = resolve; });
+      await new Promise((resolve) => {
+        img.onload = resolve;
+      });
 
       const canvas = canvasRef.current;
       if (!canvas) throw new Error('Canvas not found');
-      
+
       canvas.width = img.width;
       canvas.height = img.height;
-      
+
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Canvas context not found');
 
@@ -193,24 +196,22 @@ export default function GhostProtocol({ onLog }: GhostProtocolProps) {
 
         const byteIdx = Math.floor(b / 8);
         const bitPos = 7 - (b % 8); // big-endian bit order within each byte
-        
+
         if (data[channelIndices[ci]] & 1) {
-          decodedBytes[byteIdx] |= (1 << bitPos);
+          decodedBytes[byteIdx] |= 1 << bitPos;
         }
       }
 
       const decoder = new TextDecoder();
       const extractedText = decoder.decode(decodedBytes);
-      
+
       setDecodedJSON(extractedText);
       onLog?.('SUCCESS', `✅ Payload extracted successfully [${byteLen} bytes].`);
-
     } catch (err: any) {
       onLog?.('ERROR', `Extraction failed: ${err.message}`);
     } finally {
       setIsDecoding(false);
     }
-
   }, [decodeImage, onLog]);
 
   return (
@@ -220,9 +221,7 @@ export default function GhostProtocol({ onLog }: GhostProtocolProps) {
           <EyeOff className="w-5 h-5 text-purple-400" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-100 flex items-center gap-2">
-            Ghost Protocol
-          </h3>
+          <h3 className="text-lg font-bold text-gray-100 flex items-center gap-2">Ghost Protocol</h3>
           <p className="text-xs text-gray-500 font-mono">LSB Image Steganography</p>
         </div>
       </div>
@@ -247,33 +246,33 @@ export default function GhostProtocol({ onLog }: GhostProtocolProps) {
           {/* Payload text input */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-               <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-1">
-                 Secret Message
-               </label>
-               <textarea
-                 className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-sm text-gray-300 focus:border-purple-500/50 outline-none resize-none min-h-[80px] font-mono placeholder:text-gray-600"
-                 value={payloadText}
-                 onChange={(e) => setPayloadText(e.target.value)}
-                 placeholder="Enter secret message to encode..."
-               />
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-1">
+                Secret Message
+              </label>
+              <textarea
+                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-sm text-gray-300 focus:border-purple-500/50 outline-none resize-none min-h-[80px] font-mono placeholder:text-gray-600"
+                value={payloadText}
+                onChange={(e) => setPayloadText(e.target.value)}
+                placeholder="Enter secret message to encode..."
+              />
             </div>
 
             <div className="space-y-2">
               <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-1">
-                 Cover Image (PNG/JPG)
-               </label>
-               <div className="relative">
-                 <input 
-                   type="file" 
-                   accept="image/*" 
-                   onChange={(e) => handleImageUpload(e, 'encode')}
-                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                 />
-                 <div className="w-full bg-black/40 border border-white/10 border-dashed rounded-lg p-3 text-sm text-gray-400 flex items-center justify-center gap-2 hover:bg-white/5 transition-colors">
-                   <Upload className="w-4 h-4" />
-                   {coverImage ? 'IMAGE ACQUIRED' : 'CLICK TO UPLOAD'}
-                 </div>
-               </div>
+                Cover Image (PNG/JPG)
+              </label>
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, 'encode')}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                />
+                <div className="w-full bg-black/40 border border-white/10 border-dashed rounded-lg p-3 text-sm text-gray-400 flex items-center justify-center gap-2 hover:bg-white/5 transition-colors">
+                  <Upload className="w-4 h-4" />
+                  {coverImage ? 'IMAGE ACQUIRED' : 'CLICK TO UPLOAD'}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -282,67 +281,73 @@ export default function GhostProtocol({ onLog }: GhostProtocolProps) {
             onClick={handleInject}
             disabled={!coverImage || !payloadText.trim() || isInjecting}
             className={`w-full py-3 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2
-               ${(!coverImage || !payloadText.trim()) 
-                  ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
-                  : 'bg-purple-500/20 text-purple-400 border border-purple-500/50 hover:bg-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
+               ${
+                 !coverImage || !payloadText.trim()
+                   ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                   : 'bg-purple-500/20 text-purple-400 border border-purple-500/50 hover:bg-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
                }
             `}
           >
-             {isInjecting ? <AlertTriangle className="w-4 h-4 animate-pulse" /> : <Key className="w-4 h-4" />}
-             {isInjecting ? 'INJECTING PAYLOAD...' : 'INJECT LSB PAYLOAD'}
+            {isInjecting ? <AlertTriangle className="w-4 h-4 animate-pulse" /> : <Key className="w-4 h-4" />}
+            {isInjecting ? 'INJECTING PAYLOAD...' : 'INJECT LSB PAYLOAD'}
           </button>
 
           {/* Result Block */}
           {injectedImage && (
-             <div className="p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl space-y-3">
-               <div className="flex items-center gap-2 text-purple-400 text-sm font-semibold">
-                 <ShieldCheck className="w-4 h-4" />
-                 Weaponized Asset Ready
-               </div>
-               <div className="h-40 w-full rounded-lg overflow-hidden border border-white/10 relative group">
-                  <img src={injectedImage} alt="Injected" className="object-cover w-full h-full" />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <a 
-                      href={injectedImage} 
-                      download="classified_asset.png"
-                      className="px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-purple-600 transition-colors"
-                    >
-                      <Download className="w-4 h-4" />
-                      DOWNLOAD ASSET
-                    </a>
-                  </div>
-               </div>
-               <p className="text-[10px] text-gray-500 font-mono text-center">Asset MUST be shared as an uncompressed file to preserve integrity.</p>
-             </div>
+            <div className="p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl space-y-3">
+              <div className="flex items-center gap-2 text-purple-400 text-sm font-semibold">
+                <ShieldCheck className="w-4 h-4" />
+                Weaponized Asset Ready
+              </div>
+              <div className="h-40 w-full rounded-lg overflow-hidden border border-white/10 relative group">
+                <img src={injectedImage} alt="Injected" className="object-cover w-full h-full" />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <a
+                    href={injectedImage}
+                    download="classified_asset.png"
+                    className="px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-purple-600 transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    DOWNLOAD ASSET
+                  </a>
+                </div>
+              </div>
+              <p className="text-[10px] text-gray-500 font-mono text-center">
+                Asset MUST be shared as an uncompressed file to preserve integrity.
+              </p>
+            </div>
           )}
         </div>
       )}
 
       {activeTab === 'decode' && (
         <div className="space-y-4 animate-fade-in">
-           <div className="relative h-32 w-full bg-black/40 border-2 border-white/10 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 hover:border-purple-500/50 hover:bg-purple-500/5 transition-all text-gray-400 group">
-             <input 
-               type="file" 
-               accept="image/png" 
-               onChange={(e) => handleImageUpload(e, 'decode')}
-               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-             />
-             <Viewfinder className="w-6 h-6 text-gray-500 group-hover:text-purple-400 transition-colors" />
-             <span className="text-sm font-semibold uppercase tracking-widest">{decodeImage ? 'ASSET LOADED' : 'DROP ASSET HERE'}</span>
-           </div>
+          <div className="relative h-32 w-full bg-black/40 border-2 border-white/10 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 hover:border-purple-500/50 hover:bg-purple-500/5 transition-all text-gray-400 group">
+            <input
+              type="file"
+              accept="image/png"
+              onChange={(e) => handleImageUpload(e, 'decode')}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            />
+            <Viewfinder className="w-6 h-6 text-gray-500 group-hover:text-purple-400 transition-colors" />
+            <span className="text-sm font-semibold uppercase tracking-widest">
+              {decodeImage ? 'ASSET LOADED' : 'DROP ASSET HERE'}
+            </span>
+          </div>
 
-           <button
+          <button
             onClick={handleDecode}
             disabled={!decodeImage || isDecoding}
             className={`w-full py-3 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2
-               ${!decodeImage 
-                  ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
-                  : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-500/30'
+               ${
+                 !decodeImage
+                   ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                   : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-500/30'
                }
             `}
           >
-             {isDecoding ? <AlertTriangle className="w-4 h-4 animate-pulse" /> : <EyeOff className="w-4 h-4" />}
-             {isDecoding ? 'EXTRACTING...' : 'EXTRACT PAYLOAD'}
+            {isDecoding ? <AlertTriangle className="w-4 h-4 animate-pulse" /> : <EyeOff className="w-4 h-4" />}
+            {isDecoding ? 'EXTRACTING...' : 'EXTRACT PAYLOAD'}
           </button>
 
           {decodedJSON && (

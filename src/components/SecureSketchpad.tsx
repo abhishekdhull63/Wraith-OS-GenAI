@@ -21,7 +21,7 @@ export default function SecureSketchpad({ onClose, onLog }: SecureSketchpadProps
     // Fill black background for dark mode sketch
     ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.lineWidth = 3;
@@ -44,7 +44,7 @@ export default function SecureSketchpad({ onClose, onLog }: SecureSketchpadProps
 
     return {
       x: clientX - rect.left,
-      y: clientY - rect.top
+      y: clientY - rect.top,
     };
   };
 
@@ -93,8 +93,7 @@ export default function SecureSketchpad({ onClose, onLog }: SecureSketchpadProps
       await saveToLocker(dataUrl, 'VISION', 'CRITICAL', `Operator Sketch — ${new Date().toLocaleTimeString()}`, false);
       onLog?.('SUCCESS', '✅ Sketch encrypted and secured in the Vault');
       onClose();
-    } catch (err) {
-      console.error(err);
+    } catch {
       onLog?.('ERROR', '❌ Failed to encrypt sketch payload');
     } finally {
       setIsSaving(false);
@@ -104,7 +103,6 @@ export default function SecureSketchpad({ onClose, onLog }: SecureSketchpadProps
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4 animate-fade-in">
       <div className="glass-card overflow-hidden shadow-2xl w-full max-w-4xl flex flex-col relative border-cyan-500/30">
-        
         {/* Glow Effects */}
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
@@ -115,7 +113,10 @@ export default function SecureSketchpad({ onClose, onLog }: SecureSketchpadProps
             <PenTool className="w-5 h-5" />
             SECURE SKETCHPAD //
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white transition-colors">
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white transition-colors"
+          >
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -152,7 +153,9 @@ export default function SecureSketchpad({ onClose, onLog }: SecureSketchpadProps
             disabled={isSaving}
             className="flex items-center gap-2 px-6 py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 text-xs font-mono font-bold tracking-widest border border-cyan-500/30 transition-colors disabled:opacity-50 reveal-btn"
           >
-            {isSaving ? <span className="animate-pulse">ENCRYPTING...</span> : (
+            {isSaving ? (
+              <span className="animate-pulse">ENCRYPTING...</span>
+            ) : (
               <>
                 <Save className="w-4 h-4" />
                 ENCRYPT & SAVE TO VAULT

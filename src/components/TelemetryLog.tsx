@@ -2,13 +2,13 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, Elevation, Tag, Intent, InputGroup, Button } from '@blueprintjs/core';
 
 // ─── Palette Constants ──────────────────────────────────────────────────────────
-const PANEL_BG   = '#182026';
-const BORDER     = '#394B59';
-const TEXT_PRI   = '#F5F8FA';
-const TEXT_MUT   = '#A7B6C2';
-const DANGER     = '#DB3737';
-const SUCCESS    = '#0F9960';
-const HIGHLIGHT  = '#2B95D6';
+const PANEL_BG = '#182026';
+const BORDER = '#394B59';
+const TEXT_PRI = '#F5F8FA';
+const TEXT_MUT = '#A7B6C2';
+const DANGER = '#DB3737';
+const SUCCESS = '#0F9960';
+const HIGHLIGHT = '#2B95D6';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -66,7 +66,7 @@ function fmtTs(iso: string): string {
 
 function PulsingDot({ live }: { live: boolean }) {
   const color = live ? SUCCESS : '#5C7080';
-  
+
   return (
     <span className="relative flex h-2.5 w-2.5">
       {live && (
@@ -75,22 +75,19 @@ function PulsingDot({ live }: { live: boolean }) {
           style={{ backgroundColor: color, borderRadius: '50%' }}
         />
       )}
-      <span
-        className="relative inline-flex h-2.5 w-2.5"
-        style={{ backgroundColor: color, borderRadius: '50%' }}
-      />
+      <span className="relative inline-flex h-2.5 w-2.5" style={{ backgroundColor: color, borderRadius: '50%' }} />
     </span>
   );
 }
 
 function EntryBlock({ entry }: { entry: TelemetryEntry }) {
-  const isAlert    = entry.type === 'AI_ALERT';
+  const isAlert = entry.type === 'AI_ALERT';
   const isOutgoing = entry.type === 'OUTGOING';
 
   const borderColor = isAlert ? DANGER : isOutgoing ? SUCCESS : HIGHLIGHT;
-  const bgColor     = isAlert ? `${DANGER}1A` : 'transparent';
-  const alignClass  = isOutgoing ? 'ml-auto text-right' : '';
-  const maxW        = 'max-w-[92%]';
+  const bgColor = isAlert ? `${DANGER}1A` : 'transparent';
+  const alignClass = isOutgoing ? 'ml-auto text-right' : '';
+  const maxW = 'max-w-[92%]';
 
   return (
     <div className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'} w-full`}>
@@ -172,7 +169,7 @@ export default function TelemetryLog({ onLog, onSendWebRTC, incomingMessages }: 
       meta: `P2P: WebRTC-DTLS | PAYLOAD_SZ: ${msg.text.length}B | DIRECT`,
     }));
 
-    setEntries(prev => [...prev, ...newEntries]);
+    setEntries((prev) => [...prev, ...newEntries]);
   }, [incomingMessages]);
 
   const handleSend = useCallback(() => {
@@ -196,17 +193,20 @@ export default function TelemetryLog({ onLog, onSendWebRTC, incomingMessages }: 
       meta: `ENC: AES-256-GCM | SIG: ED25519 | SEQ: ${entries.length + 1}`,
     };
 
-    setEntries(prev => [...prev, newEntry]);
+    setEntries((prev) => [...prev, newEntry]);
     setInputValue('');
     onLog?.('SUCCESS', `Telemetry burst transmitted [${trimmed.length} chars] — encrypted via AES-256-GCM`);
   }, [inputValue, entries, onLog, onSendWebRTC]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  }, [handleSend]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    },
+    [handleSend],
+  );
 
   return (
     <Card
@@ -226,10 +226,7 @@ export default function TelemetryLog({ onLog, onSendWebRTC, incomingMessages }: 
       >
         <div className="flex items-center gap-2.5">
           <PulsingDot live />
-          <span
-            className="text-[10px] font-mono font-bold tracking-widest uppercase"
-            style={{ color: SUCCESS }}
-          >
+          <span className="text-[10px] font-mono font-bold tracking-widest uppercase" style={{ color: SUCCESS }}>
             TELEMETRY_FEED :: LIVE
           </span>
         </div>
@@ -276,16 +273,13 @@ export default function TelemetryLog({ onLog, onSendWebRTC, incomingMessages }: 
           </div>
         )}
 
-        {entries.map(entry => (
+        {entries.map((entry) => (
           <EntryBlock key={entry.id} entry={entry} />
         ))}
 
         {/* Blinking cursor at bottom of feed */}
         <div className="flex items-center gap-1.5 pt-2">
-          <span
-            className="inline-block w-1.5 h-3.5 animate-pulse"
-            style={{ backgroundColor: HIGHLIGHT }}
-          />
+          <span className="inline-block w-1.5 h-3.5 animate-pulse" style={{ backgroundColor: HIGHLIGHT }} />
           <span className="text-[10px] font-mono tracking-widest" style={{ color: TEXT_MUT }}>
             STREAM_OPEN
           </span>

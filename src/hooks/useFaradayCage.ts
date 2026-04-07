@@ -5,7 +5,6 @@ export function useFaradayCage(isArmed: boolean, onBreach: () => void) {
     if (!isArmed) return;
 
     const handleOnline = () => {
-      console.warn('⚡ [FARADAY CAGE] Unauthorized network bridge detected! Air-gap breached.');
       onBreach();
     };
 

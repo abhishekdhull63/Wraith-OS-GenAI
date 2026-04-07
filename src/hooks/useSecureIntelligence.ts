@@ -1,7 +1,7 @@
 /**
  * useSecureIntelligence.ts
  * ========================
- * Air-gapped AI integration hook for Deep-Cover Hub.
+ * Air-gapped AI integration hook for Wraith OS.
  * Wraps the RunAnywhere Web SDK to provide local LLM text analysis
  * and local Whisper STT — zero cloud, zero API keys.
  *
@@ -47,11 +47,7 @@ export interface AnalysisConfig {
  * - `OUT_OF_MEMORY`    — WASM heap or browser tab ran out of memory.
  * - `UNKNOWN`          — Unrecognized SDK error.
  */
-export type IntelErrorCode =
-  | 'MIC_DENIED'
-  | 'MODEL_NOT_FOUND'
-  | 'OUT_OF_MEMORY'
-  | 'UNKNOWN';
+export type IntelErrorCode = 'MIC_DENIED' | 'MODEL_NOT_FOUND' | 'OUT_OF_MEMORY' | 'UNKNOWN';
 
 /** Structured error with a machine-readable code and the raw SDK error. */
 export interface IntelError {
@@ -151,11 +147,7 @@ export interface SecureIntelligence {
    *   { temperature: 0.3 }
    * );
    */
-  streamAnalysis: (
-    prompt: string,
-    onChunk: (chunk: string) => void,
-    config?: AnalysisConfig,
-  ) => Promise<void>;
+  streamAnalysis: (prompt: string, onChunk: (chunk: string) => void, config?: AnalysisConfig) => Promise<void>;
 
   /**
    * Analysis with autonomous tool calling.
@@ -215,7 +207,7 @@ function deriveSystemStatus(
 // ─── Hook ───────────────────────────────────────────────────────────────────────
 
 /**
- * `useSecureIntelligence` — Unified air-gapped AI hook for Deep-Cover Hub.
+ * `useSecureIntelligence` — Unified air-gapped AI hook for Wraith OS.
  *
  * Provides local LLM text analysis and local Whisper speech-to-text,
  * all running 100% in-browser via WebAssembly. No network calls.
@@ -257,15 +249,9 @@ export function useSecureIntelligence(): SecureIntelligence {
   const sttReady = !sttRawError;
 
   // ── Classified Errors ─────────────────────────────────────────────────────
-  const llmError = useMemo<IntelError | null>(
-    () => (llmRawError ? classifyError(llmRawError) : null),
-    [llmRawError],
-  );
+  const llmError = useMemo<IntelError | null>(() => (llmRawError ? classifyError(llmRawError) : null), [llmRawError]);
 
-  const sttError = useMemo<IntelError | null>(
-    () => (sttRawError ? classifyError(sttRawError) : null),
-    [sttRawError],
-  );
+  const sttError = useMemo<IntelError | null>(() => (sttRawError ? classifyError(sttRawError) : null), [sttRawError]);
 
   // ── System Status ─────────────────────────────────────────────────────────
   const systemStatus = useMemo<SystemReadiness>(
@@ -293,11 +279,7 @@ export function useSecureIntelligence(): SecureIntelligence {
 
   // ── LLM: Streaming Analysis ───────────────────────────────────────────────
   const streamAnalysis = useCallback(
-    async (
-      prompt: string,
-      onChunk: (chunk: string) => void,
-      config?: AnalysisConfig,
-    ): Promise<void> => {
+    async (prompt: string, onChunk: (chunk: string) => void, config?: AnalysisConfig): Promise<void> => {
       if (!llmReady) {
         throw classifyError(new Error('ERR_MODEL_NOT_FOUND: LLM engine is not ready.'));
       }
@@ -315,11 +297,7 @@ export function useSecureIntelligence(): SecureIntelligence {
 
   // ── LLM: Analyze With Tools (Autonomous Pipeline) ─────────────────────────
   const analyzeWithTools = useCallback(
-    async (
-      prompt: string,
-      onChunk: (chunk: string) => void,
-      config?: AnalysisConfig,
-    ): Promise<ToolCallResult> => {
+    async (prompt: string, onChunk: (chunk: string) => void, config?: AnalysisConfig): Promise<ToolCallResult> => {
       const pipelineStart = performance.now();
 
       if (!llmReady) {
@@ -329,21 +307,24 @@ export function useSecureIntelligence(): SecureIntelligence {
       // Step 1: Stream the analysis
       let fullAnalysis = '';
       try {
-        await sdkStreamText(prompt, (chunk) => {
-          fullAnalysis += chunk;
-          onChunk(chunk);
-        }, {
-          temperature: config?.temperature ?? DEFAULT_ANALYSIS_CONFIG.temperature,
-          max_tokens: config?.max_tokens ?? DEFAULT_ANALYSIS_CONFIG.max_tokens,
-        });
+        await sdkStreamText(
+          prompt,
+          (chunk) => {
+            fullAnalysis += chunk;
+            onChunk(chunk);
+          },
+          {
+            temperature: config?.temperature ?? DEFAULT_ANALYSIS_CONFIG.temperature,
+            max_tokens: config?.max_tokens ?? DEFAULT_ANALYSIS_CONFIG.max_tokens,
+          },
+        );
       } catch (err) {
         throw classifyError(err);
       }
 
       // Step 2: Autonomous tool decision
       // Detect if this is high-threat intel that should be preserved
-      const isCritical = /THREAT LEVEL:.*CRITICAL/i.test(fullAnalysis)
-        || /TOP SECRET/i.test(fullAnalysis);
+      const isCritical = /THREAT LEVEL:.*CRITICAL/i.test(fullAnalysis) || /TOP SECRET/i.test(fullAnalysis);
       const isHighThreat = isCritical || /THREAT LEVEL:.*HIGH/i.test(fullAnalysis);
 
       let threatLevel = 'LOW';
@@ -376,11 +357,6 @@ export function useSecureIntelligence(): SecureIntelligence {
         );
         result.savedEntry = entry;
         result.pipelineMs = performance.now() - pipelineStart;
-
-        console.log(
-          `[Tool Call] secure_intelligence executed in ${result.pipelineMs.toFixed(1)}ms | ` +
-          `Threat: ${threatLevel} | Hash: ${entry.digital_fingerprint.slice(0, 16)}…`
-        );
       }
 
       return result;
@@ -389,16 +365,19 @@ export function useSecureIntelligence(): SecureIntelligence {
   );
 
   // ── STT: Start Recording ──────────────────────────────────────────────────
-  const startSecureRecording = useCallback((customStream?: MediaStream): void => {
-    if (!sttReady) {
-      throw classifyError(new Error('ERR_MODEL_NOT_FOUND: STT engine is not ready.'));
-    }
-    try {
-      sdkStartRecording(customStream);
-    } catch (err) {
-      throw classifyError(err);
-    }
-  }, [sttReady, sdkStartRecording]);
+  const startSecureRecording = useCallback(
+    (customStream?: MediaStream): void => {
+      if (!sttReady) {
+        throw classifyError(new Error('ERR_MODEL_NOT_FOUND: STT engine is not ready.'));
+      }
+      try {
+        sdkStartRecording(customStream);
+      } catch (err) {
+        throw classifyError(err);
+      }
+    },
+    [sttReady, sdkStartRecording],
+  );
 
   // ── STT: Stop Recording & Transcribe ──────────────────────────────────────
   const stopSecureRecording = useCallback(async (): Promise<string> => {

@@ -67,25 +67,24 @@ export function base64ToBuffer(b64: string): ArrayBuffer {
  */
 async function deriveKey(salt: Uint8Array): Promise<CryptoKey> {
   const encoder = new TextEncoder();
-  
+
   let baseSecret = MASTER_PASSWORD;
-  
+
   // OPPENHEIMER OVERRIDE:
   if (localStorage.getItem('oppenheimer_active') === 'true') {
-     const oppenheimerSeed = sessionStorage.getItem('oppenheimer_seed');
-     if (!oppenheimerSeed) {
-        throw new Error("OPPENHEIMER LOCKOUT: Master AES Key eradicated from RAM. 3-of-5 Physical Horcrux threshold required for reconstruction.");
-     }
-     baseSecret = oppenheimerSeed;
+    const oppenheimerSeed = sessionStorage.getItem('oppenheimer_seed');
+    if (!oppenheimerSeed) {
+      throw new Error(
+        'OPPENHEIMER LOCKOUT: Master AES Key eradicated from RAM. 3-of-5 Physical Horcrux threshold required for reconstruction.',
+      );
+    }
+    baseSecret = oppenheimerSeed;
   }
-  
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(baseSecret),
-    'PBKDF2',
-    false,
-    ['deriveBits', 'deriveKey']
-  );
+
+  const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(baseSecret), 'PBKDF2', false, [
+    'deriveBits',
+    'deriveKey',
+  ]);
 
   return crypto.subtle.deriveKey(
     {
@@ -97,7 +96,7 @@ async function deriveKey(salt: Uint8Array): Promise<CryptoKey> {
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
     true,
-    ['encrypt', 'decrypt']
+    ['encrypt', 'decrypt'],
   );
 }
 
@@ -116,59 +115,56 @@ export async function generateHash(content: string): Promise<string> {
  * Encrypt plaintext using AES-GCM
  * Returns { encryptedContent, ivBase64, saltBase64 }
  */
-async function encryptVaultContent(plaintext: string, vdfConfig?: { iterations: number, seedStr: string }, chronosParams?: { lat: number, lng: number, heading: number }): Promise<{ ciphertext: string; ivStr: string; saltStr: string }> {
+async function encryptVaultContent(
+  plaintext: string,
+  vdfConfig?: { iterations: number; seedStr: string },
+  chronosParams?: { lat: number; lng: number; heading: number },
+): Promise<{ ciphertext: string; ivStr: string; saltStr: string }> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  
+
   let key: CryptoKey;
-  
+
   if (vdfConfig) {
-      const seedBuffer = new TextEncoder().encode(vdfConfig.seedStr).buffer as ArrayBuffer;
-      const vdfResultBuffer = await runVDFEngine(seedBuffer, vdfConfig.iterations, () => {});
-      
-      const keyMaterial = await crypto.subtle.importKey(
-        'raw',
-        vdfResultBuffer,
-        'PBKDF2',
-        false,
-        ['deriveBits', 'deriveKey']
-      );
-      key = await crypto.subtle.deriveKey(
-        { name: 'PBKDF2', salt, iterations: 1000, hash: 'SHA-256' },
-        keyMaterial,
-        { name: 'AES-GCM', length: 256 },
-        false,
-        ['encrypt', 'decrypt']
-      );
+    const seedBuffer = new TextEncoder().encode(vdfConfig.seedStr).buffer as ArrayBuffer;
+    const vdfResultBuffer = await runVDFEngine(seedBuffer, vdfConfig.iterations, () => {});
+
+    const keyMaterial = await crypto.subtle.importKey('raw', vdfResultBuffer, 'PBKDF2', false, [
+      'deriveBits',
+      'deriveKey',
+    ]);
+    key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: 1000, hash: 'SHA-256' },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt'],
+    );
   } else {
-      const ghostDriveSalt = localStorage.getItem('ghost_drive_hash') || '';
-      const encoder = new TextEncoder();
-      
-      let chronosString = '';
-      if (chronosParams) {
-          // Normalize mathematically: Lat/Lng to 4 decimal places (~11m), Heading rounded to nearest 5 degrees
-          const cLat = chronosParams.lat.toFixed(4);
-          const cLng = chronosParams.lng.toFixed(4);
-          const cHdg = Math.round(chronosParams.heading / 5) * 5;
-          chronosString = `|CHRONOS|LAT:${cLat}|LNG:${cLng}|HDG:${cHdg}|`;
-      }
-      
-      const combinedSaltBuffer = new Uint8Array(salt.length + ghostDriveSalt.length + chronosString.length);
-      combinedSaltBuffer.set(salt, 0);
-      combinedSaltBuffer.set(encoder.encode(ghostDriveSalt), salt.length);
-      combinedSaltBuffer.set(encoder.encode(chronosString), salt.length + ghostDriveSalt.length);
-      
-      key = await deriveKey(combinedSaltBuffer);
+    const ghostDriveSalt = localStorage.getItem('ghost_drive_hash') || '';
+    const encoder = new TextEncoder();
+
+    let chronosString = '';
+    if (chronosParams) {
+      // Normalize mathematically: Lat/Lng to 4 decimal places (~11m), Heading rounded to nearest 5 degrees
+      const cLat = chronosParams.lat.toFixed(4);
+      const cLng = chronosParams.lng.toFixed(4);
+      const cHdg = Math.round(chronosParams.heading / 5) * 5;
+      chronosString = `|CHRONOS|LAT:${cLat}|LNG:${cLng}|HDG:${cHdg}|`;
+    }
+
+    const combinedSaltBuffer = new Uint8Array(salt.length + ghostDriveSalt.length + chronosString.length);
+    combinedSaltBuffer.set(salt, 0);
+    combinedSaltBuffer.set(encoder.encode(ghostDriveSalt), salt.length);
+    combinedSaltBuffer.set(encoder.encode(chronosString), salt.length + ghostDriveSalt.length);
+
+    key = await deriveKey(combinedSaltBuffer);
   }
 
   const encoder = new TextEncoder();
   const encodedData = encoder.encode(plaintext);
 
-  const encryptedBuf = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
-    key,
-    encodedData
-  );
+  const encryptedBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encodedData);
 
   return {
     ciphertext: bufferToBase64(encryptedBuf),
@@ -180,7 +176,14 @@ async function encryptVaultContent(plaintext: string, vdfConfig?: { iterations: 
 /**
  * Decrypt cipher text using AES-GCM
  */
-export async function decryptVaultContent(ciphertextB64: string, ivB64: string, saltB64: string, vdfConfig?: { iterations: number, seedStr: string }, onVdfProgress?: (pct: number) => void, chronosParams?: { lat: number, lng: number, heading: number }): Promise<string> {
+export async function decryptVaultContent(
+  ciphertextB64: string,
+  ivB64: string,
+  saltB64: string,
+  vdfConfig?: { iterations: number; seedStr: string },
+  onVdfProgress?: (pct: number) => void,
+  chronosParams?: { lat: number; lng: number; heading: number },
+): Promise<string> {
   try {
     const saltBuf = base64ToBuffer(saltB64);
     const ivBuf = base64ToBuffer(ivB64);
@@ -189,53 +192,49 @@ export async function decryptVaultContent(ciphertextB64: string, ivB64: string, 
     let key: CryptoKey;
 
     if (vdfConfig) {
-        const seedBuffer = new TextEncoder().encode(vdfConfig.seedStr).buffer as ArrayBuffer;
-        const vdfResultBuffer = await runVDFEngine(seedBuffer, vdfConfig.iterations, onVdfProgress || (() => {}));
-        
-        const keyMaterial = await crypto.subtle.importKey(
-          'raw',
-          vdfResultBuffer,
-          'PBKDF2',
-          false,
-          ['deriveBits', 'deriveKey']
-        );
-        key = await crypto.subtle.deriveKey(
-          { name: 'PBKDF2', salt: new Uint8Array(saltBuf), iterations: 1000, hash: 'SHA-256' },
-          keyMaterial,
-          { name: 'AES-GCM', length: 256 },
-          false,
-          ['encrypt', 'decrypt']
-        );
-    } else {
-        const ghostDriveSalt = localStorage.getItem('ghost_drive_hash') || '';
-        const encoder = new TextEncoder();
-        
-        let chronosString = '';
-        if (chronosParams) {
-            const cLat = chronosParams.lat.toFixed(4);
-            const cLng = chronosParams.lng.toFixed(4);
-            const cHdg = Math.round(chronosParams.heading / 5) * 5;
-            chronosString = `|CHRONOS|LAT:${cLat}|LNG:${cLng}|HDG:${cHdg}|`;
-        }
-        
-        const combinedSaltBuffer = new Uint8Array(saltBuf.byteLength + ghostDriveSalt.length + chronosString.length);
-        combinedSaltBuffer.set(new Uint8Array(saltBuf), 0);
-        combinedSaltBuffer.set(encoder.encode(ghostDriveSalt), saltBuf.byteLength);
-        combinedSaltBuffer.set(encoder.encode(chronosString), saltBuf.byteLength + ghostDriveSalt.length);
+      const seedBuffer = new TextEncoder().encode(vdfConfig.seedStr).buffer as ArrayBuffer;
+      const vdfResultBuffer = await runVDFEngine(seedBuffer, vdfConfig.iterations, onVdfProgress || (() => {}));
 
-        key = await deriveKey(combinedSaltBuffer);
+      const keyMaterial = await crypto.subtle.importKey('raw', vdfResultBuffer, 'PBKDF2', false, [
+        'deriveBits',
+        'deriveKey',
+      ]);
+      key = await crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt: new Uint8Array(saltBuf), iterations: 1000, hash: 'SHA-256' },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt'],
+      );
+    } else {
+      const ghostDriveSalt = localStorage.getItem('ghost_drive_hash') || '';
+      const encoder = new TextEncoder();
+
+      let chronosString = '';
+      if (chronosParams) {
+        const cLat = chronosParams.lat.toFixed(4);
+        const cLng = chronosParams.lng.toFixed(4);
+        const cHdg = Math.round(chronosParams.heading / 5) * 5;
+        chronosString = `|CHRONOS|LAT:${cLat}|LNG:${cLng}|HDG:${cHdg}|`;
+      }
+
+      const combinedSaltBuffer = new Uint8Array(saltBuf.byteLength + ghostDriveSalt.length + chronosString.length);
+      combinedSaltBuffer.set(new Uint8Array(saltBuf), 0);
+      combinedSaltBuffer.set(encoder.encode(ghostDriveSalt), saltBuf.byteLength);
+      combinedSaltBuffer.set(encoder.encode(chronosString), saltBuf.byteLength + ghostDriveSalt.length);
+
+      key = await deriveKey(combinedSaltBuffer);
     }
 
     const decryptedBuf = await crypto.subtle.decrypt(
       { name: 'AES-GCM', iv: new Uint8Array(ivBuf) as BufferSource },
       key,
-      cipherBuf
+      cipherBuf,
     );
 
     const decoder = new TextDecoder();
     return decoder.decode(decryptedBuf);
-  } catch (err) {
-    console.error('[Vault Crypto] Decryption failed. Corrupt payload or wrong key.', err);
+  } catch {
     return '[[ ENCRYPTION ERROR: PAYLOAD CORRUPTED OR TAMPERED ]]';
   }
 }
@@ -284,21 +283,20 @@ export async function saveToLocker(
   vdfSeed?: string,
   chronosLat?: number,
   chronosLng?: number,
-  chronosHeading?: number
+  chronosHeading?: number,
 ): Promise<SecureEntry> {
-  const startTime = performance.now();
-
   const id = `DCH-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-  
+
   // Fingerprint original text (tamper seal)
   const digital_fingerprint = await generateHash(content);
-  
+
   // Encrypt payload
   const vdfConfig = vdfIterations && vdfSeed ? { iterations: vdfIterations, seedStr: vdfSeed } : undefined;
-  const chronosParams = chronosLat !== undefined && chronosLng !== undefined && chronosHeading !== undefined 
-    ? { lat: chronosLat, lng: chronosLng, heading: chronosHeading }
-    : undefined;
-  
+  const chronosParams =
+    chronosLat !== undefined && chronosLng !== undefined && chronosHeading !== undefined
+      ? { lat: chronosLat, lng: chronosLng, heading: chronosHeading }
+      : undefined;
+
   const { ciphertext, ivStr, saltStr } = await encryptVaultContent(content, vdfConfig, chronosParams);
 
   const entry: SecureEntry = {
@@ -317,7 +315,7 @@ export async function saveToLocker(
     vdfSeed,
     chronosLat,
     chronosLng,
-    chronosHeading
+    chronosHeading,
   };
 
   const db = await openDB();
@@ -328,9 +326,6 @@ export async function saveToLocker(
     tx.onerror = () => reject(tx.error);
   });
   db.close();
-
-  const elapsed = performance.now() - startTime;
-  console.log(`[Evidence Locker] Secured & Encrypted ${id} in ${elapsed.toFixed(1)}ms (AES-GCM, fingerprint: ${digital_fingerprint.slice(0, 16)}…)`);
 
   return entry;
 }
@@ -346,22 +341,22 @@ export async function getAllEntries(): Promise<SecureEntry[]> {
     request.onsuccess = async () => {
       db.close();
       const rawEntries = (request.result as SecureEntry[]).reverse();
-      
+
       // Decrypt all contents
       const decryptedEntries = await Promise.all(
         rawEntries.map(async (entry) => {
           if (!entry.iv || !entry.salt) return entry; // Legacy fallback
-          
+
           if (entry.vdfIterations) {
-             // Leave content as ciphertext so frontend can spin up VDF Worker and track progress
-             return entry;
+            // Leave content as ciphertext so frontend can spin up VDF Worker and track progress
+            return entry;
           }
 
           const plainText = await decryptVaultContent(entry.content, entry.iv, entry.salt);
           return { ...entry, content: plainText };
-        })
+        }),
       );
-      
+
       resolve(decryptedEntries);
     };
     request.onerror = () => {
@@ -384,9 +379,9 @@ export async function getEntry(id: string): Promise<SecureEntry | null> {
       const entry = request.result as SecureEntry | null;
       if (!entry) return resolve(null);
       if (!entry.iv || !entry.salt) return resolve(entry); // Legacy fallback
-      
+
       if (entry.vdfIterations) {
-         return resolve(entry);
+        return resolve(entry);
       }
 
       const plainText = await decryptVaultContent(entry.content, entry.iv, entry.salt);
@@ -452,7 +447,6 @@ export async function logIntruder(photoBase64: string): Promise<void> {
     tx.objectStore('IntruderLogs').put(entry);
     tx.oncomplete = () => {
       db.close();
-      console.warn('[HONEYTOKEN] Intruder snapshot secured to offline storage.');
       resolve();
     };
     tx.onerror = () => {

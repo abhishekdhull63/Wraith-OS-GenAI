@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import ExcelDecoy from './components/ExcelDecoy';
 import WraithTerminal from './components/WraithTerminal';
 import BootSequence from './components/BootSequence';
-// import BiometricOverwatch from './components/BiometricOverwatch';
 import DeepCoverDashboard from './components/DeepCoverDashboard';
 
 /**
@@ -15,8 +14,8 @@ import DeepCoverDashboard from './components/DeepCoverDashboard';
 export default function App() {
   const [appState, setAppState] = useState<'decoy' | 'boot' | 'dashboard'>('decoy');
 
-  const handleWraithCommand = useCallback((command: string, _args: string[]) => {
-    console.log(`[WRAITH CMD] ${command}`, _args);
+  const handleWraithCommand = useCallback((_command: string, _args: string[]) => {
+    /* Command dispatched to subsystems */
   }, []);
 
   // ── STAGE 1: FULL DECOY WITH HUD TERMINAL ───────────────────────────────
@@ -24,10 +23,7 @@ export default function App() {
     return (
       <>
         <ExcelDecoy />
-        <WraithTerminal
-          onCommand={handleWraithCommand}
-          onUnlock={() => setAppState('boot')}
-        />
+        <WraithTerminal onCommand={handleWraithCommand} onUnlock={() => setAppState('boot')} />
       </>
     );
   }
@@ -37,13 +33,11 @@ export default function App() {
     return <BootSequence onComplete={() => setAppState('dashboard')} />;
   }
 
-  // ── STAGE 3: THE DEEP-COVER HUB ─────────────────────────────────────────
+  // ── STAGE 3: WRAITH OS ──────────────────────────────────────────────────
   return (
     <div className="relative min-h-screen w-screen overflow-x-hidden bg-black">
-      {/* BiometricOverwatch — uncomment when emotion_model_v2 is converted:
-      <BiometricOverwatch onEmergencyLock={() => setAppState('decoy')} />
-      */}
       <DeepCoverDashboard isBooted={true} isUnlocked={true} onLock={() => setAppState('decoy')} />
+      <WraithTerminal onCommand={handleWraithCommand} />
     </div>
   );
 }

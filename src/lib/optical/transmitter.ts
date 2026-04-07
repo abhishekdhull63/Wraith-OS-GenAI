@@ -17,21 +17,21 @@ export async function generateOpticalStrobeSequence(payload: string, chunkSize =
     const rawSegment = payload.substring(i * chunkSize, (i + 1) * chunkSize);
     // Header format: ARGUS|[TOTAL]|[INDEX]|[PAYLOAD]
     const qrText = `ARGUS|${totalChunks}|${i}|${rawSegment}`;
-    
+
     const dataUrl = await QRCode.toDataURL(qrText, {
       margin: 2,
       scale: 8,
       color: {
         dark: '#000000',
-        light: '#FFFFFF'
+        light: '#FFFFFF',
       },
-      errorCorrectionLevel: 'L' // Low error correction for maximum data capacity and speed
+      errorCorrectionLevel: 'L', // Low error correction for maximum data capacity and speed
     });
 
     chunks.push({
       index: i,
       total: totalChunks,
-      dataUrl
+      dataUrl,
     });
   }
 

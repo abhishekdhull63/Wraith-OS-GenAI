@@ -11,25 +11,18 @@
  */
 
 import { useState, useCallback } from 'react';
-import {
-  Card,
-  Elevation,
-  Divider,
-  ProgressBar,
-  Button,
-  Intent,
-} from '@blueprintjs/core';
+import { Card, Elevation, Divider, ProgressBar, Button, Intent } from '@blueprintjs/core';
 
 // ─── Palette ────────────────────────────────────────────────────────────────────
-const BG_BASE   = '#10161A';
-const PANEL_BG  = '#182026';
-const BORDER    = '#394B59';
-const TEXT_PRI  = '#F5F8FA';
-const TEXT_MUT  = '#A7B6C2';
-const ACCENT    = '#2B95D6';
-const DANGER    = '#DB3737';
+const BG_BASE = '#10161A';
+const PANEL_BG = '#182026';
+const BORDER = '#394B59';
+const TEXT_PRI = '#F5F8FA';
+const TEXT_MUT = '#A7B6C2';
+const ACCENT = '#2B95D6';
+const DANGER = '#DB3737';
 const NODE_GREY = '#5C7080';
-const SUCCESS   = '#0F9960';
+const SUCCESS = '#0F9960';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -130,8 +123,10 @@ const MOCK_EDGES: [number, number][] = [
 function GraphEdge({ x1, y1, x2, y2, active }: { x1: number; y1: number; x2: number; y2: number; active: boolean }) {
   return (
     <line
-      x1={`${x1}%`} y1={`${y1}%`}
-      x2={`${x2}%`} y2={`${y2}%`}
+      x1={`${x1}%`}
+      y1={`${y1}%`}
+      x2={`${x2}%`}
+      y2={`${y2}%`}
       stroke={active ? ACCENT : BORDER}
       strokeWidth={active ? 1.5 : 0.8}
       strokeDasharray={active ? 'none' : '4 3'}
@@ -140,15 +135,7 @@ function GraphEdge({ x1, y1, x2, y2, active }: { x1: number; y1: number; x2: num
   );
 }
 
-function GraphNode({
-  node,
-  isSelected,
-  onClick,
-}: {
-  node: EntityNode;
-  isSelected: boolean;
-  onClick: () => void;
-}) {
+function GraphNode({ node, isSelected, onClick }: { node: EntityNode; isSelected: boolean; onClick: () => void }) {
   const r = node.variant === 'critical' ? 22 : 18;
 
   let strokeColor = NODE_GREY;
@@ -180,7 +167,10 @@ function GraphNode({
   return (
     <g
       className="cursor-pointer"
-      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
       opacity={node.isolated ? 0.5 : 1}
     >
       {/* Glow background circle */}
@@ -225,12 +215,7 @@ function GraphNode({
       />
 
       {/* Inner dot */}
-      <circle
-        cx={`${node.cx}%`}
-        cy={`${node.cy}%`}
-        r={3}
-        fill={node.isolated ? DANGER : strokeColor}
-      />
+      <circle cx={`${node.cx}%`} cy={`${node.cy}%`} r={3} fill={node.isolated ? DANGER : strokeColor} />
 
       {/* QUARANTINED label for isolated nodes */}
       {node.isolated && (
@@ -290,26 +275,30 @@ export default function ThreatAnalysisBoard({ onLog }: ThreatAnalysisBoardProps)
   const [nodes, setNodes] = useState<EntityNode[]>(MOCK_NODES);
   const [edges, setEdges] = useState<[number, number][]>(MOCK_EDGES);
 
-  const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
+  const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
 
-  const handleSelectNode = useCallback((node: EntityNode) => {
-    setSelectedNodeId(prev => prev === node.id ? null : node.id);
-    onLog?.('INFO', `Entity selected: ${node.label} [${node.hash}]`);
-  }, [onLog]);
+  const handleSelectNode = useCallback(
+    (node: EntityNode) => {
+      setSelectedNodeId((prev) => (prev === node.id ? null : node.id));
+      onLog?.('INFO', `Entity selected: ${node.label} [${node.hash}]`);
+    },
+    [onLog],
+  );
 
   const handleIsolate = useCallback(() => {
     if (!selectedNode) return;
 
     // 1. Sever all edges connected to this node
-    const nodeIndex = nodes.findIndex(n => n.id === selectedNode.id);
-    setEdges(prev => prev.filter(([from, to]) => from !== nodeIndex && to !== nodeIndex));
+    const nodeIndex = nodes.findIndex((n) => n.id === selectedNode.id);
+    setEdges((prev) => prev.filter(([from, to]) => from !== nodeIndex && to !== nodeIndex));
 
     // 2. Mark the node as visually isolated (red dashed quarantine)
-    setNodes(prev => prev.map(n =>
-      n.id === selectedNode.id ? { ...n, isolated: true } : n
-    ));
+    setNodes((prev) => prev.map((n) => (n.id === selectedNode.id ? { ...n, isolated: true } : n)));
 
-    onLog?.('WARNING', `⚠ ISOLATION COMPLETE: ${selectedNode.label} [${selectedNode.hash}] — all ${edges.filter(([a, b]) => a === nodeIndex || b === nodeIndex).length} edges severed`);
+    onLog?.(
+      'WARNING',
+      `⚠ ISOLATION COMPLETE: ${selectedNode.label} [${selectedNode.hash}] — all ${edges.filter(([a, b]) => a === nodeIndex || b === nodeIndex).length} edges severed`,
+    );
     setSelectedNodeId(null);
   }, [selectedNode, nodes, edges, onLog]);
 
@@ -359,25 +348,35 @@ export default function ThreatAnalysisBoard({ onLog }: ThreatAnalysisBoardProps)
         </div>
 
         {/* Top-right legend */}
-        <div className="absolute top-3 right-3 z-10 px-2.5 py-1.5 flex items-center gap-4" style={{ backgroundColor: 'rgba(14,20,25,0.85)' }}>
+        <div
+          className="absolute top-3 right-3 z-10 px-2.5 py-1.5 flex items-center gap-4"
+          style={{ backgroundColor: 'rgba(14,20,25,0.85)' }}
+        >
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2" style={{ backgroundColor: DANGER, borderRadius: '50%' }} />
-            <span className="text-[9px] font-mono tracking-widest" style={{ color: TEXT_MUT }}>CRITICAL</span>
+            <span className="text-[9px] font-mono tracking-widest" style={{ color: TEXT_MUT }}>
+              CRITICAL
+            </span>
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2" style={{ backgroundColor: ACCENT, borderRadius: '50%' }} />
-            <span className="text-[9px] font-mono tracking-widest" style={{ color: TEXT_MUT }}>SELECTED</span>
+            <span className="text-[9px] font-mono tracking-widest" style={{ color: TEXT_MUT }}>
+              SELECTED
+            </span>
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2" style={{ backgroundColor: NODE_GREY, borderRadius: '50%' }} />
-            <span className="text-[9px] font-mono tracking-widest" style={{ color: TEXT_MUT }}>STANDARD</span>
+            <span className="text-[9px] font-mono tracking-widest" style={{ color: TEXT_MUT }}>
+              STANDARD
+            </span>
           </span>
         </div>
 
         {/* Bottom-left stats overlay */}
         <div className="absolute bottom-3 left-3 z-10 px-2.5 py-1.5" style={{ backgroundColor: 'rgba(14,20,25,0.85)' }}>
           <span className="text-[9px] font-mono tracking-widest" style={{ color: TEXT_MUT }}>
-            NODES: {nodes.length} &nbsp;|&nbsp; EDGES: {edges.length} &nbsp;|&nbsp; ISOLATED: {nodes.filter(n => n.isolated).length}
+            NODES: {nodes.length} &nbsp;|&nbsp; EDGES: {edges.length} &nbsp;|&nbsp; ISOLATED:{' '}
+            {nodes.filter((n) => n.isolated).length}
           </span>
         </div>
 
@@ -411,18 +410,11 @@ export default function ThreatAnalysisBoard({ onLog }: ThreatAnalysisBoardProps)
             const nt = nodes[to];
             if (!nf || !nt) return null;
             const active = selectedNodeId === nf.id || selectedNodeId === nt.id;
-            return (
-              <GraphEdge
-                key={`edge-${i}`}
-                x1={nf.cx} y1={nf.cy}
-                x2={nt.cx} y2={nt.cy}
-                active={active}
-              />
-            );
+            return <GraphEdge key={`edge-${i}`} x1={nf.cx} y1={nf.cy} x2={nt.cx} y2={nt.cy} active={active} />;
           })}
 
           {/* Nodes */}
-          {nodes.map(node => (
+          {nodes.map((node) => (
             <GraphNode
               key={node.id}
               node={node}
@@ -436,7 +428,8 @@ export default function ThreatAnalysisBoard({ onLog }: ThreatAnalysisBoardProps)
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.03]"
           style={{
-            backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.08) 2px, rgba(255,255,255,0.08) 4px)',
+            backgroundImage:
+              'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.08) 2px, rgba(255,255,255,0.08) 4px)',
           }}
         />
       </div>
@@ -459,14 +452,7 @@ export default function ThreatAnalysisBoard({ onLog }: ThreatAnalysisBoardProps)
           <span className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase" style={{ color: TEXT_MUT }}>
             ENTITY METADATA
           </span>
-          <Button
-            icon="cross"
-            minimal
-            small
-            className="!rounded-none"
-            onClick={handleClear}
-            disabled={!selectedNode}
-          />
+          <Button icon="cross" minimal small className="!rounded-none" onClick={handleClear} disabled={!selectedNode} />
         </div>
 
         {/* Inspector Body */}
@@ -474,7 +460,10 @@ export default function ThreatAnalysisBoard({ onLog }: ThreatAnalysisBoardProps)
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
             {/* Section 1: Identity */}
             <div>
-              <span className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase block mb-2" style={{ color: ACCENT }}>
+              <span
+                className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase block mb-2"
+                style={{ color: ACCENT }}
+              >
                 IDENTIFICATION
               </span>
               <KVRow label="NODE_HASH" value={selectedNode.hash} />
@@ -482,8 +471,24 @@ export default function ThreatAnalysisBoard({ onLog }: ThreatAnalysisBoardProps)
               <KVRow label="TYPE" value={selectedNode.type} />
               <KVRow
                 label="STATUS"
-                value={selectedNode.isolated ? 'QUARANTINED' : selectedNode.variant === 'critical' ? 'CRITICAL' : selectedNode.variant === 'selected' ? 'ACTIVE' : 'PASSIVE'}
-                valueColor={selectedNode.isolated ? DANGER : selectedNode.variant === 'critical' ? DANGER : selectedNode.variant === 'selected' ? ACCENT : NODE_GREY}
+                value={
+                  selectedNode.isolated
+                    ? 'QUARANTINED'
+                    : selectedNode.variant === 'critical'
+                      ? 'CRITICAL'
+                      : selectedNode.variant === 'selected'
+                        ? 'ACTIVE'
+                        : 'PASSIVE'
+                }
+                valueColor={
+                  selectedNode.isolated
+                    ? DANGER
+                    : selectedNode.variant === 'critical'
+                      ? DANGER
+                      : selectedNode.variant === 'selected'
+                        ? ACCENT
+                        : NODE_GREY
+                }
               />
             </div>
 
@@ -491,7 +496,10 @@ export default function ThreatAnalysisBoard({ onLog }: ThreatAnalysisBoardProps)
 
             {/* Section 2: AI Confidence */}
             <div>
-              <span className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase block mb-2" style={{ color: ACCENT }}>
+              <span
+                className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase block mb-2"
+                style={{ color: ACCENT }}
+              >
                 AI CONFIDENCE
               </span>
               <div className="flex justify-between items-baseline mb-1.5">
@@ -503,7 +511,13 @@ export default function ThreatAnalysisBoard({ onLog }: ThreatAnalysisBoardProps)
                 </span>
               </div>
               <ProgressBar
-                intent={selectedNode.confidence >= 0.8 ? Intent.PRIMARY : selectedNode.confidence >= 0.6 ? Intent.WARNING : Intent.DANGER}
+                intent={
+                  selectedNode.confidence >= 0.8
+                    ? Intent.PRIMARY
+                    : selectedNode.confidence >= 0.6
+                      ? Intent.WARNING
+                      : Intent.DANGER
+                }
                 value={selectedNode.confidence}
                 animate={false}
                 stripes={false}
@@ -518,7 +532,10 @@ export default function ThreatAnalysisBoard({ onLog }: ThreatAnalysisBoardProps)
 
             {/* Section 3: Extracted Telemetry */}
             <div>
-              <span className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase block mb-2" style={{ color: ACCENT }}>
+              <span
+                className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase block mb-2"
+                style={{ color: ACCENT }}
+              >
                 EXTRACTED TELEMETRY
               </span>
               <div className="space-y-0.5">
@@ -532,22 +549,34 @@ export default function ThreatAnalysisBoard({ onLog }: ThreatAnalysisBoardProps)
 
             {/* Section 4: Connection Graph Stats */}
             <div>
-              <span className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase block mb-2" style={{ color: ACCENT }}>
+              <span
+                className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase block mb-2"
+                style={{ color: ACCENT }}
+              >
                 GRAPH ADJACENCY
               </span>
               <KVRow
                 label="CONNECTIONS"
-                value={String(edges.filter(([a, b]) => nodes[a]?.id === selectedNode.id || nodes[b]?.id === selectedNode.id).length)}
+                value={String(
+                  edges.filter(([a, b]) => nodes[a]?.id === selectedNode.id || nodes[b]?.id === selectedNode.id).length,
+                )}
               />
               <KVRow label="CLUSTER_ID" value="CL-0x0A" />
-              <KVRow label="CENTRALITY" value={selectedNode.isolated ? '0.00 (SEVERED)' : selectedNode.variant === 'critical' ? '0.97 (HUB)' : '0.34'} />
+              <KVRow
+                label="CENTRALITY"
+                value={
+                  selectedNode.isolated ? '0.00 (SEVERED)' : selectedNode.variant === 'critical' ? '0.97 (HUB)' : '0.34'
+                }
+              />
             </div>
           </div>
         ) : (
           /* Empty State */
           <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
             <div className="w-10 h-10 mb-4 flex items-center justify-center" style={{ border: `1px dashed ${BORDER}` }}>
-              <span className="text-lg" style={{ color: NODE_GREY }}>⬡</span>
+              <span className="text-lg" style={{ color: NODE_GREY }}>
+                ⬡
+              </span>
             </div>
             <span className="text-[10px] font-mono tracking-[0.2em] uppercase block mb-1" style={{ color: TEXT_MUT }}>
               NO ENTITY SELECTED
@@ -569,7 +598,7 @@ export default function ThreatAnalysisBoard({ onLog }: ThreatAnalysisBoardProps)
             disabled={!selectedNode || selectedNode.isolated}
             onClick={handleIsolate}
           />
-          {nodes.some(n => n.isolated) && (
+          {nodes.some((n) => n.isolated) && (
             <Button
               intent={Intent.SUCCESS}
               fill
@@ -583,8 +612,11 @@ export default function ThreatAnalysisBoard({ onLog }: ThreatAnalysisBoardProps)
             <span className="text-[8px] font-mono tracking-wider" style={{ color: NODE_GREY }}>
               ACTION: SEVER ALL GRAPH EDGES
             </span>
-            <span className="text-[8px] font-mono tracking-wider" style={{ color: nodes.some(n => n.isolated) ? DANGER : NODE_GREY }}>
-              {nodes.some(n => n.isolated) ? `${nodes.filter(n => n.isolated).length} QUARANTINED` : 'READY'}
+            <span
+              className="text-[8px] font-mono tracking-wider"
+              style={{ color: nodes.some((n) => n.isolated) ? DANGER : NODE_GREY }}
+            >
+              {nodes.some((n) => n.isolated) ? `${nodes.filter((n) => n.isolated).length} QUARANTINED` : 'READY'}
             </span>
           </div>
         </div>

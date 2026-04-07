@@ -1,14 +1,16 @@
-
-
 /**
  * Runs the VDF Proof of Work on a Background Thread.
  * Returns the final ArrayBuffer (the AES Key).
  */
-export async function runVDFEngine(seed: ArrayBuffer, iterations: number, onProgress: (pct: number) => void): Promise<ArrayBuffer> {
+export async function runVDFEngine(
+  seed: ArrayBuffer,
+  iterations: number,
+  onProgress: (pct: number) => void,
+): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     // Vite handles worker paths elegantly using `new URL(...)`
     const worker = new Worker(new URL('./vdfWorker.ts', import.meta.url), { type: 'module' });
-    
+
     worker.postMessage({ seed, iterations });
 
     worker.onmessage = (e) => {

@@ -10,8 +10,12 @@ import App from './App.tsx';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then(
-      (registration) => console.log('DeepCover SW Registration successful', registration.scope),
-      (err) => console.error('DeepCover SW Registration failed', err)
+      () => {
+        /* SW registered */
+      },
+      () => {
+        /* SW registration failed */
+      },
     );
   });
 }

@@ -26,24 +26,168 @@ interface ShipmentRow {
 }
 
 const SHIPMENTS: ShipmentRow[] = [
-  { id: 'SHP-20260301-0041', origin: 'WH-Mumbai-Central',     destination: 'DC-Pune-East',           pallets: 24,  status: 'Cleared',    eta: '2026-03-28', carrier: 'BlueDart Logistics' },
-  { id: 'SHP-20260301-0042', origin: 'WH-Delhi-NCR-02',       destination: 'DC-Jaipur-Main',         pallets: 18,  status: 'In Transit', eta: '2026-03-31', carrier: 'Delhivery Express' },
-  { id: 'SHP-20260302-0043', origin: 'WH-Chennai-Port',       destination: 'DC-Bangalore-Whitefield', pallets: 36, status: 'Pending',    eta: '2026-04-02', carrier: 'DTDC Freight' },
-  { id: 'SHP-20260302-0044', origin: 'WH-Mumbai-Central',     destination: 'DC-Ahmedabad-GIDC',      pallets: 12,  status: 'Cleared',    eta: '2026-03-29', carrier: 'Gati Ltd.' },
-  { id: 'SHP-20260303-0045', origin: 'WH-Kolkata-Howrah',     destination: 'DC-Patna-West',          pallets: 8,   status: 'In Transit', eta: '2026-04-01', carrier: 'Rivigo Freight' },
-  { id: 'SHP-20260303-0046', origin: 'WH-Hyderabad-HiTec',    destination: 'DC-Vizag-Industrial',    pallets: 42,  status: 'Pending',    eta: '2026-04-03', carrier: 'Safexpress' },
-  { id: 'SHP-20260304-0047', origin: 'WH-Delhi-NCR-02',       destination: 'DC-Lucknow-Gomti',       pallets: 15,  status: 'Cleared',    eta: '2026-03-30', carrier: 'TCI Express' },
-  { id: 'SHP-20260304-0048', origin: 'WH-Chennai-Port',       destination: 'DC-Coimbatore-South',    pallets: 28,  status: 'In Transit', eta: '2026-04-01', carrier: 'BlueDart Logistics' },
-  { id: 'SHP-20260305-0049', origin: 'WH-Mumbai-Central',     destination: 'DC-Nagpur-MIDC',         pallets: 9,   status: 'Pending',    eta: '2026-04-04', carrier: 'Delhivery Express' },
-  { id: 'SHP-20260305-0050', origin: 'WH-Kolkata-Howrah',     destination: 'DC-Guwahati-Main',       pallets: 31,  status: 'In Transit', eta: '2026-04-02', carrier: 'Rivigo Freight' },
-  { id: 'SHP-20260306-0051', origin: 'WH-Hyderabad-HiTec',    destination: 'DC-Chennai-Ambattur',    pallets: 22,  status: 'Cleared',    eta: '2026-03-31', carrier: 'DTDC Freight' },
-  { id: 'SHP-20260306-0052', origin: 'WH-Delhi-NCR-02',       destination: 'DC-Chandigarh-Ind',      pallets: 6,   status: 'Pending',    eta: '2026-04-05', carrier: 'Gati Ltd.' },
-  { id: 'SHP-20260307-0053', origin: 'WH-Chennai-Port',       destination: 'DC-Madurai-Central',     pallets: 14,  status: 'In Transit', eta: '2026-04-03', carrier: 'TCI Express' },
-  { id: 'SHP-20260307-0054', origin: 'WH-Mumbai-Central',     destination: 'DC-Surat-Ring-Road',     pallets: 38,  status: 'Cleared',    eta: '2026-03-29', carrier: 'Safexpress' },
-  { id: 'SHP-20260308-0055', origin: 'WH-Kolkata-Howrah',     destination: 'DC-Bhubaneswar-Main',    pallets: 19,  status: 'Pending',    eta: '2026-04-06', carrier: 'BlueDart Logistics' },
-  { id: 'SHP-20260308-0056', origin: 'WH-Hyderabad-HiTec',    destination: 'DC-Pune-East',           pallets: 27,  status: 'In Transit', eta: '2026-04-04', carrier: 'Delhivery Express' },
-  { id: 'SHP-20260309-0057', origin: 'WH-Delhi-NCR-02',       destination: 'DC-Dehradun-IT-Park',    pallets: 11,  status: 'Cleared',    eta: '2026-03-30', carrier: 'Rivigo Freight' },
-  { id: 'SHP-20260309-0058', origin: 'WH-Chennai-Port',       destination: 'DC-Trivandrum-Tech',     pallets: 33,  status: 'Pending',    eta: '2026-04-07', carrier: 'DTDC Freight' },
+  {
+    id: 'SHP-20260301-0041',
+    origin: 'WH-Mumbai-Central',
+    destination: 'DC-Pune-East',
+    pallets: 24,
+    status: 'Cleared',
+    eta: '2026-03-28',
+    carrier: 'BlueDart Logistics',
+  },
+  {
+    id: 'SHP-20260301-0042',
+    origin: 'WH-Delhi-NCR-02',
+    destination: 'DC-Jaipur-Main',
+    pallets: 18,
+    status: 'In Transit',
+    eta: '2026-03-31',
+    carrier: 'Delhivery Express',
+  },
+  {
+    id: 'SHP-20260302-0043',
+    origin: 'WH-Chennai-Port',
+    destination: 'DC-Bangalore-Whitefield',
+    pallets: 36,
+    status: 'Pending',
+    eta: '2026-04-02',
+    carrier: 'DTDC Freight',
+  },
+  {
+    id: 'SHP-20260302-0044',
+    origin: 'WH-Mumbai-Central',
+    destination: 'DC-Ahmedabad-GIDC',
+    pallets: 12,
+    status: 'Cleared',
+    eta: '2026-03-29',
+    carrier: 'Gati Ltd.',
+  },
+  {
+    id: 'SHP-20260303-0045',
+    origin: 'WH-Kolkata-Howrah',
+    destination: 'DC-Patna-West',
+    pallets: 8,
+    status: 'In Transit',
+    eta: '2026-04-01',
+    carrier: 'Rivigo Freight',
+  },
+  {
+    id: 'SHP-20260303-0046',
+    origin: 'WH-Hyderabad-HiTec',
+    destination: 'DC-Vizag-Industrial',
+    pallets: 42,
+    status: 'Pending',
+    eta: '2026-04-03',
+    carrier: 'Safexpress',
+  },
+  {
+    id: 'SHP-20260304-0047',
+    origin: 'WH-Delhi-NCR-02',
+    destination: 'DC-Lucknow-Gomti',
+    pallets: 15,
+    status: 'Cleared',
+    eta: '2026-03-30',
+    carrier: 'TCI Express',
+  },
+  {
+    id: 'SHP-20260304-0048',
+    origin: 'WH-Chennai-Port',
+    destination: 'DC-Coimbatore-South',
+    pallets: 28,
+    status: 'In Transit',
+    eta: '2026-04-01',
+    carrier: 'BlueDart Logistics',
+  },
+  {
+    id: 'SHP-20260305-0049',
+    origin: 'WH-Mumbai-Central',
+    destination: 'DC-Nagpur-MIDC',
+    pallets: 9,
+    status: 'Pending',
+    eta: '2026-04-04',
+    carrier: 'Delhivery Express',
+  },
+  {
+    id: 'SHP-20260305-0050',
+    origin: 'WH-Kolkata-Howrah',
+    destination: 'DC-Guwahati-Main',
+    pallets: 31,
+    status: 'In Transit',
+    eta: '2026-04-02',
+    carrier: 'Rivigo Freight',
+  },
+  {
+    id: 'SHP-20260306-0051',
+    origin: 'WH-Hyderabad-HiTec',
+    destination: 'DC-Chennai-Ambattur',
+    pallets: 22,
+    status: 'Cleared',
+    eta: '2026-03-31',
+    carrier: 'DTDC Freight',
+  },
+  {
+    id: 'SHP-20260306-0052',
+    origin: 'WH-Delhi-NCR-02',
+    destination: 'DC-Chandigarh-Ind',
+    pallets: 6,
+    status: 'Pending',
+    eta: '2026-04-05',
+    carrier: 'Gati Ltd.',
+  },
+  {
+    id: 'SHP-20260307-0053',
+    origin: 'WH-Chennai-Port',
+    destination: 'DC-Madurai-Central',
+    pallets: 14,
+    status: 'In Transit',
+    eta: '2026-04-03',
+    carrier: 'TCI Express',
+  },
+  {
+    id: 'SHP-20260307-0054',
+    origin: 'WH-Mumbai-Central',
+    destination: 'DC-Surat-Ring-Road',
+    pallets: 38,
+    status: 'Cleared',
+    eta: '2026-03-29',
+    carrier: 'Safexpress',
+  },
+  {
+    id: 'SHP-20260308-0055',
+    origin: 'WH-Kolkata-Howrah',
+    destination: 'DC-Bhubaneswar-Main',
+    pallets: 19,
+    status: 'Pending',
+    eta: '2026-04-06',
+    carrier: 'BlueDart Logistics',
+  },
+  {
+    id: 'SHP-20260308-0056',
+    origin: 'WH-Hyderabad-HiTec',
+    destination: 'DC-Pune-East',
+    pallets: 27,
+    status: 'In Transit',
+    eta: '2026-04-04',
+    carrier: 'Delhivery Express',
+  },
+  {
+    id: 'SHP-20260309-0057',
+    origin: 'WH-Delhi-NCR-02',
+    destination: 'DC-Dehradun-IT-Park',
+    pallets: 11,
+    status: 'Cleared',
+    eta: '2026-03-30',
+    carrier: 'Rivigo Freight',
+  },
+  {
+    id: 'SHP-20260309-0058',
+    origin: 'WH-Chennai-Port',
+    destination: 'DC-Trivandrum-Tech',
+    pallets: 33,
+    status: 'Pending',
+    eta: '2026-04-07',
+    carrier: 'DTDC Freight',
+  },
 ];
 
 const NAV_MENUS = ['File', 'Edit', 'View', 'Logistics', 'Inventory', 'Q3 Projections', 'Reports', 'Help'];
@@ -52,21 +196,24 @@ const NAV_MENUS = ['File', 'Edit', 'View', 'Logistics', 'Inventory', 'Q3 Project
 
 function StatusBadge({ status }: { status: ShipmentRow['status'] }) {
   const styles: Record<ShipmentRow['status'], string> = {
-    'Pending':    'background-color: #FFF3CD; color: #856404; border: 1px solid #FFEEBA;',
+    Pending: 'background-color: #FFF3CD; color: #856404; border: 1px solid #FFEEBA;',
     'In Transit': 'background-color: #CCE5FF; color: #004085; border: 1px solid #B8DAFF;',
-    'Cleared':    'background-color: #D4EDDA; color: #155724; border: 1px solid #C3E6CB;',
+    Cleared: 'background-color: #D4EDDA; color: #155724; border: 1px solid #C3E6CB;',
   };
 
   return (
     <span
       style={{
         ...Object.fromEntries(
-          styles[status].split(';').filter(Boolean).map(s => {
-            const [k, v] = s.split(':').map(x => x.trim());
-            // Convert CSS props to camelCase
-            const camel = k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-            return [camel, v];
-          })
+          styles[status]
+            .split(';')
+            .filter(Boolean)
+            .map((s) => {
+              const [k, v] = s.split(':').map((x) => x.trim());
+              // Convert CSS props to camelCase
+              const camel = k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+              return [camel, v];
+            }),
         ),
         padding: '2px 8px',
         borderRadius: '3px',
@@ -101,9 +248,9 @@ export default function LogisticsDecoy({ onUnlock }: LogisticsDecoyProps) {
 
   // Compute summary stats for the header bar
   const totalPallets = SHIPMENTS.reduce((s, r) => s + r.pallets, 0);
-  const cleared = SHIPMENTS.filter(r => r.status === 'Cleared').length;
-  const inTransit = SHIPMENTS.filter(r => r.status === 'In Transit').length;
-  const pending = SHIPMENTS.filter(r => r.status === 'Pending').length;
+  const cleared = SHIPMENTS.filter((r) => r.status === 'Cleared').length;
+  const inTransit = SHIPMENTS.filter((r) => r.status === 'In Transit').length;
+  const pending = SHIPMENTS.filter((r) => r.status === 'Pending').length;
 
   return (
     <div
@@ -181,9 +328,7 @@ export default function LogisticsDecoy({ onUnlock }: LogisticsDecoyProps) {
           <span style={{ fontSize: '11px', color: '#8F99A8' }}>
             Last sync: {new Date().toLocaleTimeString('en-IN', { hour12: false })}
           </span>
-          <span style={{ fontSize: '11px', color: '#5F6B7C', fontWeight: 500 }}>
-            A. Dhull (Ops Manager)
-          </span>
+          <span style={{ fontSize: '11px', color: '#5F6B7C', fontWeight: 500 }}>A. Dhull (Ops Manager)</span>
           <div
             style={{
               width: '22px',
@@ -220,34 +365,42 @@ export default function LogisticsDecoy({ onUnlock }: LogisticsDecoyProps) {
           <div style={{ fontSize: '11px', color: '#8F99A8', marginBottom: '2px' }}>
             Logistics &gt; Outbound Shipments &gt; Q1 2026
           </div>
-          <h1 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#1C2127' }}>
-            Outbound Shipment Tracker
-          </h1>
+          <h1 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#1C2127' }}>Outbound Shipment Tracker</h1>
         </div>
 
         {/* Summary pills */}
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '18px', fontWeight: 700, color: '#1C2127' }}>{SHIPMENTS.length}</div>
-            <div style={{ fontSize: '10px', color: '#8F99A8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Shipments</div>
+            <div style={{ fontSize: '10px', color: '#8F99A8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Shipments
+            </div>
           </div>
           <div style={{ width: '1px', height: '28px', backgroundColor: '#D3D8DE' }} />
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '18px', fontWeight: 700, color: '#1C2127' }}>{totalPallets}</div>
-            <div style={{ fontSize: '10px', color: '#8F99A8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pallets</div>
+            <div style={{ fontSize: '10px', color: '#8F99A8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Pallets
+            </div>
           </div>
           <div style={{ width: '1px', height: '28px', backgroundColor: '#D3D8DE' }} />
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '18px', fontWeight: 700, color: '#155724' }}>{cleared}</div>
-            <div style={{ fontSize: '10px', color: '#8F99A8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cleared</div>
+            <div style={{ fontSize: '10px', color: '#8F99A8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Cleared
+            </div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '18px', fontWeight: 700, color: '#004085' }}>{inTransit}</div>
-            <div style={{ fontSize: '10px', color: '#8F99A8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>In Transit</div>
+            <div style={{ fontSize: '10px', color: '#8F99A8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              In Transit
+            </div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '18px', fontWeight: 700, color: '#856404' }}>{pending}</div>
-            <div style={{ fontSize: '10px', color: '#8F99A8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pending</div>
+            <div style={{ fontSize: '10px', color: '#8F99A8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Pending
+            </div>
           </div>
         </div>
       </div>
@@ -262,13 +415,84 @@ export default function LogisticsDecoy({ onUnlock }: LogisticsDecoyProps) {
         >
           <thead>
             <tr>
-              <th style={{ color: '#5F6B7C', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Shipment ID</th>
-              <th style={{ color: '#5F6B7C', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Origin Warehouse</th>
-              <th style={{ color: '#5F6B7C', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Destination</th>
-              <th style={{ color: '#5F6B7C', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Pallets</th>
-              <th style={{ color: '#5F6B7C', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</th>
-              <th style={{ color: '#5F6B7C', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Est. Arrival</th>
-              <th style={{ color: '#5F6B7C', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Carrier</th>
+              <th
+                style={{
+                  color: '#5F6B7C',
+                  fontWeight: 600,
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                Shipment ID
+              </th>
+              <th
+                style={{
+                  color: '#5F6B7C',
+                  fontWeight: 600,
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                Origin Warehouse
+              </th>
+              <th
+                style={{
+                  color: '#5F6B7C',
+                  fontWeight: 600,
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                Destination
+              </th>
+              <th
+                style={{
+                  color: '#5F6B7C',
+                  fontWeight: 600,
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  textAlign: 'right',
+                }}
+              >
+                Pallets
+              </th>
+              <th
+                style={{
+                  color: '#5F6B7C',
+                  fontWeight: 600,
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                Status
+              </th>
+              <th
+                style={{
+                  color: '#5F6B7C',
+                  fontWeight: 600,
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                Est. Arrival
+              </th>
+              <th
+                style={{
+                  color: '#5F6B7C',
+                  fontWeight: 600,
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                Carrier
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -278,7 +502,9 @@ export default function LogisticsDecoy({ onUnlock }: LogisticsDecoyProps) {
                 <td style={{ color: '#1C2127' }}>{row.origin}</td>
                 <td style={{ color: '#1C2127' }}>{row.destination}</td>
                 <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#1C2127' }}>{row.pallets}</td>
-                <td><StatusBadge status={row.status} /></td>
+                <td>
+                  <StatusBadge status={row.status} />
+                </td>
                 <td style={{ fontFamily: 'monospace', fontSize: '11px', color: '#5F6B7C' }}>{row.eta}</td>
                 <td style={{ color: '#1C2127' }}>{row.carrier}</td>
               </tr>

@@ -20,10 +20,7 @@ export function bufferToBase64URL(buffer: ArrayBuffer): string {
   for (let i = 0; i < bytes.byteLength; i++) {
     str += String.fromCharCode(bytes[i]);
   }
-  return btoa(str)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 /**
@@ -45,15 +42,13 @@ export async function checkBiometricSupport(): Promise<boolean> {
  */
 export async function requestBiometricUnlock(): Promise<boolean> {
   if (!window.PublicKeyCredential) {
-    console.warn('[Biometrics] WebAuthn not supported in this browser.');
-    return true; // Fallback for unsupported browsers (allow unlock)
+    return true;
   }
 
   try {
     const isSupported = await checkBiometricSupport();
     if (!isSupported) {
-      console.warn('[Biometrics] Platform authenticator not available.');
-      return true; // Fallback
+      return true;
     }
 
     // ── STEP 1: If no mock credential exists, register one silently ──
@@ -61,7 +56,6 @@ export async function requestBiometricUnlock(): Promise<boolean> {
     let rawIdB64 = localStorage.getItem(MOCK_CRED_ID_KEY);
 
     if (!rawIdB64) {
-      console.log('[Biometrics] Registering initial secure hardware key...');
       const creationOptions: PublicKeyCredentialCreationOptions = {
         challenge: generateRandomBuffer(),
         rp: {
@@ -71,11 +65,11 @@ export async function requestBiometricUnlock(): Promise<boolean> {
         user: {
           id: generateRandomBuffer(),
           name: 'Operator',
-          displayName: 'Deep-Cover Operator',
+          displayName: 'Wraith OS Operator',
         },
         pubKeyCredParams: [
-          { alg: -7, type: 'public-key' },  // ES256
-          { alg: -257, type: 'public-key' } // RS256
+          { alg: -7, type: 'public-key' }, // ES256
+          { alg: -257, type: 'public-key' }, // RS256
         ],
         authenticatorSelection: {
           authenticatorAttachment: 'platform', // Requires TouchID/FaceID/Hello
@@ -84,9 +78,9 @@ export async function requestBiometricUnlock(): Promise<boolean> {
         timeout: 60000,
       };
 
-      const credential = await navigator.credentials.create({
+      const credential = (await navigator.credentials.create({
         publicKey: creationOptions,
-      }) as PublicKeyCredential;
+      })) as PublicKeyCredential;
 
       if (!credential) throw new Error('Registration cancelled or failed.');
 
@@ -96,24 +90,25 @@ export async function requestBiometricUnlock(): Promise<boolean> {
     }
 
     // ── STEP 2: Request Assertion (The actual Unlock) ──
-    console.log('[Biometrics] Requesting hardware assertion unlock...');
-    
+
     // We must pass the credential ID we just generated
     const idBuffer = new Uint8Array(
       atob(rawIdB64.replace(/-/g, '+').replace(/_/g, '/'))
         .split('')
-        .map(c => c.charCodeAt(0))
+        .map((c) => c.charCodeAt(0)),
     ).buffer;
 
     const requestOptions: PublicKeyCredentialRequestOptions = {
-        challenge: generateRandomBuffer(),
-        rpId: window.location.hostname,
-        allowCredentials: [{
-            type: 'public-key',
-            id: idBuffer,
-        }],
-        userVerification: 'required',
-        timeout: 60000,
+      challenge: generateRandomBuffer(),
+      rpId: window.location.hostname,
+      allowCredentials: [
+        {
+          type: 'public-key',
+          id: idBuffer,
+        },
+      ],
+      userVerification: 'required',
+      timeout: 60000,
     };
 
     const assertion = await navigator.credentials.get({
@@ -121,9 +116,7 @@ export async function requestBiometricUnlock(): Promise<boolean> {
     });
 
     return !!assertion; // If promise resolves with an assertion, OS granted unlock
-
-  } catch (err) {
-    console.error('[Biometrics] Hardware lock failure or user cancelled:', err);
+  } catch {
     return false;
   }
 }

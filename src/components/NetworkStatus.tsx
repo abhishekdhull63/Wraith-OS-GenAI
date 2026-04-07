@@ -14,9 +14,7 @@ import { WifiOff, Wifi, ShieldCheck, ShieldAlert } from 'lucide-react';
 // ─── Hook ───────────────────────────────────────────────────────────────────────
 
 export function useNetworkStatus() {
-  const [isOnline, setIsOnline] = useState(() =>
-    typeof navigator !== 'undefined' ? navigator.onLine : true,
-  );
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
   const [lastChange, setLastChange] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -43,13 +41,7 @@ export function useNetworkStatus() {
 
 // ─── Sidebar Indicator ──────────────────────────────────────────────────────────
 
-export function NetworkStatusIndicator({
-  isOnline,
-  collapsed,
-}: {
-  isOnline: boolean;
-  collapsed: boolean;
-}) {
+export function NetworkStatusIndicator({ isOnline, collapsed }: { isOnline: boolean; collapsed: boolean }) {
   if (collapsed) {
     return (
       <div className="flex justify-center p-3">
@@ -72,8 +64,7 @@ export function NetworkStatusIndicator({
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background:
-              'linear-gradient(180deg, transparent 0%, rgba(6,182,212,0.06) 50%, transparent 100%)',
+            background: 'linear-gradient(180deg, transparent 0%, rgba(6,182,212,0.06) 50%, transparent 100%)',
             animation: 'scan-line 3s ease-in-out infinite',
           }}
         />
@@ -84,12 +75,8 @@ export function NetworkStatusIndicator({
             <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
           </div>
           <div>
-            <p className="text-sm font-bold text-cyan-400 tracking-wide">
-              AIR-GAPPED
-            </p>
-            <p className="text-[10px] text-cyan-400/60 font-mono">
-              Zero data transmission
-            </p>
+            <p className="text-sm font-bold text-cyan-400 tracking-wide">AIR-GAPPED</p>
+            <p className="text-[10px] text-cyan-400/60 font-mono">Zero data transmission</p>
           </div>
         </div>
       </div>
@@ -102,12 +89,8 @@ export function NetworkStatusIndicator({
       <div className="flex items-center gap-3">
         <ShieldAlert className="w-5 h-5 text-amber-400 flex-shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-amber-400">
-            Network Detected
-          </p>
-          <p className="text-[10px] text-gray-500 font-mono">
-            AI runs locally — no data sent
-          </p>
+          <p className="text-sm font-semibold text-amber-400">Network Detected</p>
+          <p className="text-[10px] text-gray-500 font-mono">AI runs locally — no data sent</p>
         </div>
       </div>
     </div>
@@ -116,13 +99,7 @@ export function NetworkStatusIndicator({
 
 // ─── Full-Width Alert Banner ────────────────────────────────────────────────────
 
-export function AirGapBanner({
-  isOnline,
-  onDismiss,
-}: {
-  isOnline: boolean;
-  onDismiss?: () => void;
-}) {
+export function AirGapBanner({ isOnline, onDismiss }: { isOnline: boolean; onDismiss?: () => void }) {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -149,12 +126,8 @@ export function AirGapBanner({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Wifi className="w-4 h-4 text-amber-400" />
-            <span className="text-sm font-semibold text-amber-400 font-mono tracking-wide">
-              NETWORK RESTORED
-            </span>
-            <span className="text-xs text-gray-500">
-              — All AI operations remain local. No data was transmitted.
-            </span>
+            <span className="text-sm font-semibold text-amber-400 font-mono tracking-wide">NETWORK RESTORED</span>
+            <span className="text-xs text-gray-500">— All AI operations remain local. No data was transmitted.</span>
           </div>
           <button
             onClick={handleDismiss}
@@ -205,18 +178,14 @@ export function AirGapBanner({
                 Air-Gap Protocol Engaged
               </span>
               <span className="hidden sm:inline-block h-4 w-px bg-cyan-400/20" />
-              <span className="hidden sm:inline text-xs text-cyan-400/70 font-mono">
-                ZERO DATA TRANSMISSION
-              </span>
+              <span className="hidden sm:inline text-xs text-cyan-400/70 font-mono">ZERO DATA TRANSMISSION</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20">
               <WifiOff className="w-3 h-3 text-cyan-400" />
-              <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase">
-                Offline
-              </span>
+              <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase">Offline</span>
             </div>
             <button
               onClick={handleDismiss}

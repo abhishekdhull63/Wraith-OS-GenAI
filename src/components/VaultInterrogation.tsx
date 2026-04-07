@@ -28,7 +28,7 @@ import type { SecureEntry } from '../lib/locker';
 
 interface VaultInterrogationProps {
   onLog?: (type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR', message: string) => void;
-  /** Pushes selected content into the Entity Analyzer */
+  /** Pushes selected content into the Traffic Anomaly Engine */
   onLoadToAnalyzer?: (content: string) => void;
   /** Force re-query when vault changes */
   refreshKey?: number;
@@ -107,19 +107,13 @@ const THREAT_COLORS: Record<string, { bg: string; text: string; border: string }
 };
 
 function getThreatColors(level: string) {
-  const key = Object.keys(THREAT_COLORS).find((k) =>
-    level.toUpperCase().includes(k),
-  );
+  const key = Object.keys(THREAT_COLORS).find((k) => level.toUpperCase().includes(k));
   return THREAT_COLORS[key || 'MODERATE'];
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────────
 
-export default function VaultInterrogation({
-  onLog,
-  onLoadToAnalyzer,
-  refreshKey,
-}: VaultInterrogationProps) {
+export default function VaultInterrogation({ onLog, onLoadToAnalyzer, refreshKey }: VaultInterrogationProps) {
   const [query, setQuery] = useState('');
   const [executedQuery, setExecutedQuery] = useState('');
   const [allEntries, setAllEntries] = useState<SecureEntry[]>([]);
@@ -133,8 +127,8 @@ export default function VaultInterrogation({
     try {
       const entries = await getAllEntries();
       setAllEntries(entries);
-    } catch (err) {
-      console.error('[VaultInterrogation] Failed to load entries:', err);
+    } catch {
+      /* Failed to load vault entries */
     } finally {
       setIsLoading(false);
     }
@@ -206,9 +200,7 @@ export default function VaultInterrogation({
           <Database className="w-5 h-5 text-amber-400" />
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-bold text-gray-100">
-            Vault Interrogation
-          </h3>
+          <h3 className="text-lg font-bold text-gray-100">Vault Interrogation</h3>
           <p className="text-xs text-gray-500">
             Global Database Search · {allEntries.length} record{allEntries.length !== 1 ? 's' : ''} indexed
           </p>
@@ -272,9 +264,7 @@ export default function VaultInterrogation({
             <div className="text-center py-8 space-y-2">
               <Shield className="w-8 h-8 text-gray-700 mx-auto" />
               <p className="text-sm text-gray-500">No matching intelligence found</p>
-              <p className="text-[10px] text-gray-600 font-mono">
-                Try different keywords or broader search terms
-              </p>
+              <p className="text-[10px] text-gray-600 font-mono">Try different keywords or broader search terms</p>
             </div>
           ) : (
             searchResults.map((match) => {
@@ -310,10 +300,7 @@ export default function VaultInterrogation({
                         <FileText className="w-3.5 h-3.5 inline mr-1.5 text-gray-500" />
                         {match.labelFragments.map((f, i) =>
                           f.isMatch ? (
-                            <mark
-                              key={i}
-                              className="bg-amber-400/20 text-amber-300 rounded px-0.5"
-                            >
+                            <mark key={i} className="bg-amber-400/20 text-amber-300 rounded px-0.5">
                               {f.text}
                             </mark>
                           ) : (
@@ -326,10 +313,7 @@ export default function VaultInterrogation({
                       <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">
                         {match.contentFragments.map((f, i) =>
                           f.isMatch ? (
-                            <mark
-                              key={i}
-                              className="bg-amber-400/20 text-amber-300 rounded px-0.5"
-                            >
+                            <mark key={i} className="bg-amber-400/20 text-amber-300 rounded px-0.5">
                               {f.text}
                             </mark>
                           ) : (
@@ -349,9 +333,7 @@ export default function VaultInterrogation({
                           <Clock className="w-3 h-3" />
                           {formatDate(match.entry.timestamp)}
                         </span>
-                        <span className="text-[10px] text-gray-600 font-mono">
-                          {match.entry.type}
-                        </span>
+                        <span className="text-[10px] text-gray-600 font-mono">{match.entry.type}</span>
                         <span className="text-[10px] text-amber-500/70 font-mono font-bold">
                           {match.matchCount} match{match.matchCount !== 1 ? 'es' : ''}
                         </span>
@@ -374,10 +356,7 @@ export default function VaultInterrogation({
                       >
                         {highlightText(match.entry.content, executedQuery).map((f, i) =>
                           f.isMatch ? (
-                            <mark
-                              key={i}
-                              className="bg-amber-400/25 text-amber-300 rounded px-0.5"
-                            >
+                            <mark key={i} className="bg-amber-400/25 text-amber-300 rounded px-0.5">
                               {f.text}
                             </mark>
                           ) : (
@@ -400,10 +379,7 @@ export default function VaultInterrogation({
                         <button
                           onClick={() => {
                             onLoadToAnalyzer(match.entry.content);
-                            onLog?.(
-                              'INFO',
-                              `📋 Loaded ${match.entry.id} into Entity Analyzer`,
-                            );
+                            onLog?.('INFO', `📋 Loaded ${match.entry.id} into Traffic Anomaly Engine`);
                           }}
                           className="
                             w-full py-2.5 text-xs font-semibold text-amber-400
@@ -414,7 +390,7 @@ export default function VaultInterrogation({
                           "
                         >
                           <AlertTriangle className="w-3.5 h-3.5" />
-                          Load into Entity Analyzer
+                          Load into Traffic Anomaly Engine
                         </button>
                       )}
                     </div>

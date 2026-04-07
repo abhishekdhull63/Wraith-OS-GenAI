@@ -85,15 +85,18 @@ export default function SecureFileDrop({ onFileContent, onLog }: SecureFileDropP
                 setSuccess(true);
                 setIsScrubbed(true);
                 setLastFile({ name: file.name, size: strippedFile.size });
-                
+
                 const reader = new FileReader();
                 reader.onload = () => {
-                  onFileContent(`[IMAGE METADATA SCRUBBED]\nPayload: ${file.name}\nBase64 Payload Hash: ${(reader.result as string).slice(0, 64)}...`, file.name);
+                  onFileContent(
+                    `[IMAGE METADATA SCRUBBED]\nPayload: ${file.name}\nBase64 Payload Hash: ${(reader.result as string).slice(0, 64)}...`,
+                    file.name,
+                  );
                 };
                 reader.readAsDataURL(strippedFile);
 
                 onLog?.('SUCCESS', `🛡️ EXIF Scrubbed: ${file.name} — Data sanitized for analysis`);
-                
+
                 setTimeout(() => {
                   setSuccess(false);
                   setIsScrubbed(false);
@@ -203,9 +206,7 @@ export default function SecureFileDrop({ onFileContent, onLog }: SecureFileDropP
           }
         `}
         style={{
-          boxShadow: isDragging
-            ? '0 0 25px rgba(6,182,212,0.1), inset 0 0 15px rgba(6,182,212,0.03)'
-            : 'none',
+          boxShadow: isDragging ? '0 0 25px rgba(6,182,212,0.1), inset 0 0 15px rgba(6,182,212,0.03)' : 'none',
         }}
       >
         {/* Icon */}
@@ -237,9 +238,7 @@ export default function SecureFileDrop({ onFileContent, onLog }: SecureFileDropP
         {/* Text */}
         <div className="min-w-0 flex flex-col items-start">
           {isDragging ? (
-            <p className="text-sm font-semibold text-cyan-400">
-              Drop file to import
-            </p>
+            <p className="text-sm font-semibold text-cyan-400">Drop file to import</p>
           ) : success && lastFile ? (
             <div className="flex items-center gap-2">
               <p className="text-sm text-emerald-400">
@@ -270,8 +269,8 @@ export default function SecureFileDrop({ onFileContent, onLog }: SecureFileDropP
             </div>
           ) : (
             <p className="text-xs text-gray-500 group-hover:text-gray-400 transition-colors">
-              <span className="font-medium text-gray-400 group-hover:text-cyan-400">Drop file</span>
-              {' '}or click to import  ·  .txt .md .json .jpg
+              <span className="font-medium text-gray-400 group-hover:text-cyan-400">Drop file</span> or click to import
+              · .txt .md .json .jpg
             </p>
           )}
         </div>

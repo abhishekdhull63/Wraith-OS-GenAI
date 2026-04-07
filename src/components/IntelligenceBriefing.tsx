@@ -26,7 +26,7 @@ export default function IntelligenceBriefing({ onLog }: IntelligenceBriefingProp
 
     try {
       const entries = await getAllEntries();
-      
+
       let speechText = '';
       if (entries.length === 0) {
         speechText = 'Operator, there are no new intelligence files. The vault is empty and secure.';
@@ -39,17 +39,19 @@ export default function IntelligenceBriefing({ onLog }: IntelligenceBriefingProp
       const utterance = new SpeechSynthesisUtterance(speechText);
       utterance.pitch = 0.95;
       utterance.rate = 1.05;
-      
+
       // Look for a Microsoft or generic English voice
       const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(v => v.name.includes('Microsoft') || v.name.includes('Google') || v.lang === 'en-US');
+      const preferredVoice = voices.find(
+        (v) => v.name.includes('Microsoft') || v.name.includes('Google') || v.lang === 'en-US',
+      );
       if (preferredVoice) utterance.voice = preferredVoice;
 
       utterance.onstart = () => {
         setIsPlaying(true);
         onLog?.('INFO', '🔊 Playing Situation Briefing (Audio Intelligence)...');
       };
-      
+
       utterance.onend = () => {
         setIsPlaying(false);
         onLog?.('SUCCESS', '✅ Briefing complete.');
@@ -61,8 +63,7 @@ export default function IntelligenceBriefing({ onLog }: IntelligenceBriefingProp
       };
 
       window.speechSynthesis.speak(utterance);
-    } catch (err) {
-      console.error(err);
+    } catch {
       onLog?.('ERROR', '❌ Failed to fetch locker entries for briefing.');
     }
   }, [isPlaying, onLog]);
@@ -73,9 +74,10 @@ export default function IntelligenceBriefing({ onLog }: IntelligenceBriefingProp
       className={`
         px-3 py-1.5 rounded-lg border text-[10px] font-semibold font-mono tracking-widest
         flex items-center gap-2 transition-all duration-300 reveal-btn relative overflow-hidden
-        ${isPlaying 
-          ? 'bg-red-500/10 border-red-500/30 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.2)]'
-          : 'bg-white/[0.05] border-white/10 text-gray-300 hover:bg-white/[0.1] hover:border-white/20 hover:text-white'
+        ${
+          isPlaying
+            ? 'bg-red-500/10 border-red-500/30 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.2)]'
+            : 'bg-white/[0.05] border-white/10 text-gray-300 hover:bg-white/[0.1] hover:border-white/20 hover:text-white'
         }
       `}
     >

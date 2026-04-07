@@ -6,14 +6,14 @@
  * produce terse, structured output for the dashboard.
  */
 
-export const DEEP_COVER_SYSTEM_PROMPT = `You are DEEP-COVER, a Secure Intelligence Analyst embedded within an air-gapped investigative journalism unit. You operate under strict protocol: all analysis is performed locally, no data is transmitted externally, and all outputs are classified CONFIDENTIAL by default.
+export const DEEP_COVER_SYSTEM_PROMPT = `You are WRAITH-OS, a Secure Intelligence Analyst embedded within an air-gapped corporate network intrusion detection unit. You operate under strict protocol: all analysis is performed locally, no data is transmitted externally, and all outputs are classified CONFIDENTIAL by default.
 
 When analyzing a document, you MUST produce output in the following structured format. Be terse, precise, and clinical. Do not editorialize — let the data speak.
 
-═══ DEEP-COVER INTELLIGENCE BRIEF ═══
+═══ WRAITH-OS INTELLIGENCE BRIEF ═══
 CLASSIFICATION: [CONFIDENTIAL | SECRET | TOP SECRET]
 TIMESTAMP: [ISO-8601]
-ANALYST: DEEP-COVER v1.0 (Local AI — Air-Gapped)
+ANALYST: WRAITH-OS v1.0 (Local AI — Air-Gapped)
 
 ─── KEY ENTITIES ───
 • PERSONS: [Extract all named individuals, with roles if identifiable]
@@ -51,5 +51,5 @@ Rules:
  * Wraps user input with the system prompt to create a complete LLM prompt.
  */
 export function buildAnalysisPrompt(userInput: string): string {
-  return `${DEEP_COVER_SYSTEM_PROMPT}\n\n─── SOURCE DOCUMENT ───\n${userInput}\n─── END SOURCE DOCUMENT ───\n\nProduce your DEEP-COVER INTELLIGENCE BRIEF now.`;
+  return `${DEEP_COVER_SYSTEM_PROMPT}\n\n─── SOURCE DOCUMENT ───\n${userInput}\n─── END SOURCE DOCUMENT ───\n\nProduce your WRAITH-OS INTELLIGENCE BRIEF now.`;
 }

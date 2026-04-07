@@ -10,8 +10,8 @@ import { useEffect, useRef, useState } from 'react';
  * The key insight: only trigger on a *transition*, not on initial state.
  */
 export function useFaradayMonitor(
-  onBreach: () => void, 
-  onLog?: (type: 'WARNING' | 'ERROR' | 'INFO', msg: string) => void
+  onBreach: () => void,
+  onLog?: (type: 'WARNING' | 'ERROR' | 'INFO', msg: string) => void,
 ) {
   const [isBreached, setIsBreached] = useState(false);
   const initialLoadRef = useRef(true);
@@ -29,7 +29,10 @@ export function useFaradayMonitor(
       if (!wasOfflineRef.current) return; // Only trigger on offline→online transition
 
       setIsBreached(true);
-      onLog?.('ERROR', 'NETWORK BREACH DETECTED: Internet connection re-established. Faraday Cage compromised. LOCKING OS.');
+      onLog?.(
+        'ERROR',
+        'NETWORK BREACH DETECTED: Internet connection re-established. Faraday Cage compromised. LOCKING OS.',
+      );
       onBreach();
     };
 

@@ -12,15 +12,15 @@ export function useDeadMansSwitch(onLock: () => void, onBurn: () => void) {
     const handleActivity = () => {
       lastActivity.current = Date.now();
       // Reset lock flag if they came back before burn
-      hasLocked.current = false; 
+      hasLocked.current = false;
     };
 
     const events = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart', 'wheel'];
-    events.forEach(e => window.addEventListener(e, handleActivity));
+    events.forEach((e) => window.addEventListener(e, handleActivity));
 
     const interval = setInterval(() => {
       const inactiveFor = Date.now() - lastActivity.current;
-      
+
       // Calculate remaining time to burn to show in UI
       const remainingToBurn = Math.max(0, BURN_TIMEOUT_MS - inactiveFor);
       const mins = Math.floor(remainingToBurn / 60000);
@@ -38,7 +38,7 @@ export function useDeadMansSwitch(onLock: () => void, onBurn: () => void) {
     }, 1000);
 
     return () => {
-      events.forEach(e => window.removeEventListener(e, handleActivity));
+      events.forEach((e) => window.removeEventListener(e, handleActivity));
       clearInterval(interval);
     };
   }, [onLock, onBurn]);

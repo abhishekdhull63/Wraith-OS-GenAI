@@ -31,27 +31,25 @@ export interface VisionResult {
 export function useLocalLLM(_modelId: string) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error] = useState<Error | null>(null);
-  
+
   // It's always ready in Native Browser API Mode
   const isModelReady = true;
 
   const analyzeText = useCallback(
-    async (
-      _prompt: string,
-      _config?: { temperature?: number; max_tokens?: number },
-    ): Promise<string> => {
+    async (_prompt: string, _config?: { temperature?: number; max_tokens?: number }): Promise<string> => {
       setIsGenerating(true);
-      
+
       // Simulate 1.5 seconds of heavy processing
-      await new Promise(r => setTimeout(r, 1500));
-      
+      await new Promise((r) => setTimeout(r, 1500));
+
       setIsGenerating(false);
-      
+
       const lower = _prompt.toLowerCase();
       const isBenign = /\b(hi|hello|how are you|hey|greetings)\b/i.test(lower);
-      const isCritical = /\b(classified|secret|hack|override)\b/i.test(lower) || 
-                         /\$\s*\d+/.test(lower) || 
-                         /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/.test(lower);
+      const isCritical =
+        /\b(classified|secret|hack|override)\b/i.test(lower) ||
+        /\$\s*\d+/.test(lower) ||
+        /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/.test(lower);
 
       const capitalizedWords = _prompt.match(/\b[A-Z][a-z]+\b/g) || [];
       // Filter out first word if it's just 'Analyze' or something similar
@@ -59,10 +57,10 @@ export function useLocalLLM(_modelId: string) {
       const namesList = uniqueNames.length > 0 ? `\n\nPotential Entities/Names:\n- ${uniqueNames.join('\n- ')}` : '';
 
       if (isCritical) {
-         return `Threat Level: CRITICAL - Sensitive data footprint detected.${namesList}`;
+        return `Threat Level: CRITICAL - Sensitive data footprint detected.${namesList}`;
       }
       if (isBenign) {
-         return `Threat Level: MINIMAL - Benign conversation detected.${namesList}`;
+        return `Threat Level: MINIMAL - Benign conversation detected.${namesList}`;
       }
       return `Threat Level: UNKNOWN - Request requires further manual classification.${namesList}`;
     },
@@ -76,12 +74,71 @@ export function useLocalLLM(_modelId: string) {
       _config?: { temperature?: number; max_tokens?: number },
     ): Promise<void> => {
       setIsGenerating(true);
-      
+
       const lower = _prompt.toLowerCase();
+
+      // ── IDS / Log Analysis Mode ───────────────────────────────────────────
+      // Detect when the prompt is an IDS-style security log analysis request
+      const isIDSPrompt =
+        lower.includes('intrusion detection') ||
+        lower.includes('security alert') ||
+        (lower.includes('network log') && lower.includes('failed login'));
+
+      if (isIDSPrompt) {
+        // Extract IPs from the log data to build a contextual alert
+        const ipMatches = _prompt.match(/\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b/g) || [];
+        const ipCounts: Record<string, number> = {};
+        for (const ip of ipMatches) {
+          if (ip === '127.0.0.1' || ip === '0.0.0.0') continue;
+          ipCounts[ip] = (ipCounts[ip] || 0) + 1;
+        }
+
+        // Find the most frequent (most suspicious) IP
+        const sorted = Object.entries(ipCounts).sort(([, a], [, b]) => b - a);
+        const topIP = sorted[0]?.[0] || 'unknown source';
+        const topCount = sorted[0]?.[1] || 0;
+
+        // Detect specific threat types from log content
+        const hasFailedSSH = lower.includes('failed ssh') || lower.includes('authentication failure') || lower.includes('failed login');
+        const hasPortScan = lower.includes('port scan') || lower.includes('nmap');
+        const hasPrivEsc = lower.includes('sudo') || lower.includes('privilege') || lower.includes('escalat');
+
+        let alertLine = '';
+        let actionLine = '';
+
+        if (hasFailedSSH && topCount >= 3) {
+          alertLine = `🚨 ALERT: Brute-force SSH attack detected — ${topCount} failed login attempts from ${topIP} targeting port 22 in rapid succession.`;
+          actionLine = `✅ ACTION REQUIRED: Immediately block ${topIP} at the firewall, enforce key-only SSH authentication, and audit all successful logins from that IP range.`;
+        } else if (hasPortScan) {
+          alertLine = `🚨 ALERT: Network reconnaissance detected — SYN port scan originating from ${topIP} across multiple service ports.`;
+          actionLine = `✅ ACTION REQUIRED: Block ${topIP} at the perimeter firewall, enable IDS rate-limiting rules, and review exposed services for unnecessary open ports.`;
+        } else if (hasPrivEsc) {
+          alertLine = `🚨 ALERT: Privilege escalation activity detected — unauthorized sudo/root access attempt linked to traffic from ${topIP}.`;
+          actionLine = `✅ ACTION REQUIRED: Revoke elevated permissions for the suspect account, force password rotation, and audit sudo logs for the last 24 hours.`;
+        } else {
+          alertLine = `🚨 ALERT: Suspicious network activity detected — anomalous traffic pattern from ${topIP} with ${topCount} flagged events.`;
+          actionLine = `✅ ACTION REQUIRED: Quarantine ${topIP} in a VLAN isolation zone, capture a full packet dump, and escalate to the SOC team for forensic review.`;
+        }
+
+        const payload = `${alertLine}\n${actionLine}`;
+
+        // Stream character-by-character for the alert lines (faster, more dramatic)
+        const chars = payload.split('');
+        for (let i = 0; i < chars.length; i++) {
+          await new Promise((r) => setTimeout(r, 18));
+          onChunk(chars[i]);
+        }
+
+        setIsGenerating(false);
+        return;
+      }
+
+      // ── Default Classification Mode ───────────────────────────────────────
       const isBenign = /\b(hi|hello|how are you|hey|greetings)\b/i.test(lower);
-      const isCritical = /\b(classified|secret|hack|override)\b/i.test(lower) || 
-                         /\$\s*\d+/.test(lower) || 
-                         /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/.test(lower);
+      const isCritical =
+        /\b(classified|secret|hack|override)\b/i.test(lower) ||
+        /\$\s*\d+/.test(lower) ||
+        /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/.test(lower);
 
       const capitalizedWords = _prompt.match(/\b[A-Z][a-z]+\b/g) || [];
       const uniqueNames = [...new Set(capitalizedWords)];
@@ -89,19 +146,19 @@ export function useLocalLLM(_modelId: string) {
 
       let payload = '';
       if (isCritical) {
-         payload = `Threat Level: CRITICAL - Sensitive data footprint detected.${namesList}`;
+        payload = `Threat Level: CRITICAL - Sensitive data footprint detected.${namesList}`;
       } else if (isBenign) {
-         payload = `Threat Level: MINIMAL - Benign conversation detected.${namesList}`;
+        payload = `Threat Level: MINIMAL - Benign conversation detected.${namesList}`;
       } else {
-         payload = `Threat Level: UNKNOWN - Request requires further manual classification.${namesList}`;
+        payload = `Threat Level: UNKNOWN - Request requires further manual classification.${namesList}`;
       }
-      
+
       const words = payload.split(' ');
       for (let i = 0; i < words.length; i++) {
-        await new Promise(r => setTimeout(r, 80));
+        await new Promise((r) => setTimeout(r, 80));
         onChunk(words[i] + ' ');
       }
-      
+
       setIsGenerating(false);
     },
     [],
@@ -125,8 +182,7 @@ export function useLocalSTT(_modelId: string) {
       // Use purely the native browser WebSpeech API for mock speech
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const win = window as any;
-      const SpeechRecognitionCtor =
-        win.SpeechRecognition || win.webkitSpeechRecognition;
+      const SpeechRecognitionCtor = win.SpeechRecognition || win.webkitSpeechRecognition;
 
       if (SpeechRecognitionCtor) {
         const recognition = new SpeechRecognitionCtor();
@@ -142,8 +198,8 @@ export function useLocalSTT(_modelId: string) {
           }
         };
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        recognition.onerror = (event: any) => {
-          console.warn('[RunAnywhere] SpeechRecognition error:', event.error);
+        recognition.onerror = () => {
+          /* Speech recognition error handled silently */
         };
         recognition.start();
         recognitionRef.current = recognition;
@@ -170,7 +226,7 @@ export function useLocalSTT(_modelId: string) {
       }
 
       // Simulate a small processing delay for the transcriber
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise((r) => setTimeout(r, 800));
 
       const nativeTranscript = chunksRef.current.join(' ').trim();
       if (nativeTranscript) {
@@ -195,12 +251,7 @@ export function useLocalTTS(_modelId: string) {
 
   const getVoice = useCallback((): SpeechSynthesisVoice | null => {
     const voices = window.speechSynthesis.getVoices();
-    const preferred = [
-      'Google UK English Male',
-      'Daniel',
-      'Alex',
-      'Google US English',
-    ];
+    const preferred = ['Google UK English Male', 'Daniel', 'Alex', 'Google US English'];
     for (const name of preferred) {
       const match = voices.find((v) => v.name.includes(name));
       if (match) return match;
@@ -291,7 +342,7 @@ export function useLocalVision(_modelId: string) {
   const getFaceDetector = useCallback((): any | null => {
     if (faceDetectorSupportedRef.current === false) return null;
     if (faceDetectorRef.current) return faceDetectorRef.current;
-    
+
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const win = window as any;
@@ -308,110 +359,122 @@ export function useLocalVision(_modelId: string) {
   }, []);
 
   // ── Pixel-Diff Motion Detection (fallback) ──────────────────────────────────
-  const detectMotionRegions = useCallback((
-    currentData: Uint8ClampedArray,
-    prevData: Uint8ClampedArray,
-    canvasWidth: number,
-    canvasHeight: number
-  ): BoundingBox[] => {
-    // Build a grid of motion cells (8×8 pixel blocks)
-    const cellSize = 8;
-    const gridW = Math.floor(canvasWidth / cellSize);
-    const gridH = Math.floor(canvasHeight / cellSize);
-    const motionGrid: boolean[][] = Array.from({ length: gridH }, () => Array(gridW).fill(false));
+  const detectMotionRegions = useCallback(
+    (
+      currentData: Uint8ClampedArray,
+      prevData: Uint8ClampedArray,
+      canvasWidth: number,
+      canvasHeight: number,
+    ): BoundingBox[] => {
+      // Build a grid of motion cells (8×8 pixel blocks)
+      const cellSize = 8;
+      const gridW = Math.floor(canvasWidth / cellSize);
+      const gridH = Math.floor(canvasHeight / cellSize);
+      const motionGrid: boolean[][] = Array.from({ length: gridH }, () => Array(gridW).fill(false));
 
-    // For each cell, check if average pixel diff exceeds threshold
-    for (let gy = 0; gy < gridH; gy++) {
-      for (let gx = 0; gx < gridW; gx++) {
-        let cellDiff = 0;
-        let cellPixels = 0;
-        for (let py = gy * cellSize; py < (gy + 1) * cellSize && py < canvasHeight; py++) {
-          for (let px = gx * cellSize; px < (gx + 1) * cellSize && px < canvasWidth; px++) {
-            const idx = (py * canvasWidth + px) * 4;
-            const rDiff = Math.abs(currentData[idx] - prevData[idx]);
-            const gDiff = Math.abs(currentData[idx + 1] - prevData[idx + 1]);
-            const bDiff = Math.abs(currentData[idx + 2] - prevData[idx + 2]);
-            cellDiff += (rDiff + gDiff + bDiff);
-            cellPixels++;
-          }
-        }
-        const avgDiff = cellDiff / (cellPixels * 3); // Average per channel
-        if (avgDiff > 25) {
-          motionGrid[gy][gx] = true;
-        }
-      }
-    }
-
-    // Connected-component labeling (flood-fill) to group motion cells into blobs
-    const visited: boolean[][] = Array.from({ length: gridH }, () => Array(gridW).fill(false));
-    const blobs: { minX: number; minY: number; maxX: number; maxY: number }[] = [];
-
-    for (let gy = 0; gy < gridH; gy++) {
-      for (let gx = 0; gx < gridW; gx++) {
-        if (motionGrid[gy][gx] && !visited[gy][gx]) {
-          // BFS flood fill
-          const queue: [number, number][] = [[gx, gy]];
-          visited[gy][gx] = true;
-          let minX = gx, maxX = gx, minY = gy, maxY = gy;
-
-          while (queue.length > 0) {
-            const [cx, cy] = queue.shift()!;
-            minX = Math.min(minX, cx);
-            maxX = Math.max(maxX, cx);
-            minY = Math.min(minY, cy);
-            maxY = Math.max(maxY, cy);
-
-            // 4-connected neighbors
-            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-              const nx = cx + dx, ny = cy + dy;
-              if (nx >= 0 && nx < gridW && ny >= 0 && ny < gridH && !visited[ny][nx] && motionGrid[ny][nx]) {
-                visited[ny][nx] = true;
-                queue.push([nx, ny]);
-              }
+      // For each cell, check if average pixel diff exceeds threshold
+      for (let gy = 0; gy < gridH; gy++) {
+        for (let gx = 0; gx < gridW; gx++) {
+          let cellDiff = 0;
+          let cellPixels = 0;
+          for (let py = gy * cellSize; py < (gy + 1) * cellSize && py < canvasHeight; py++) {
+            for (let px = gx * cellSize; px < (gx + 1) * cellSize && px < canvasWidth; px++) {
+              const idx = (py * canvasWidth + px) * 4;
+              const rDiff = Math.abs(currentData[idx] - prevData[idx]);
+              const gDiff = Math.abs(currentData[idx + 1] - prevData[idx + 1]);
+              const bDiff = Math.abs(currentData[idx + 2] - prevData[idx + 2]);
+              cellDiff += rDiff + gDiff + bDiff;
+              cellPixels++;
             }
           }
-
-          // Only keep blobs that are large enough (at least 3x3 cells = 24x24 px)
-          const blobW = (maxX - minX + 1);
-          const blobH = (maxY - minY + 1);
-          if (blobW >= 3 && blobH >= 3) {
-            blobs.push({
-              minX: minX * cellSize,
-              minY: minY * cellSize,
-              maxX: (maxX + 1) * cellSize,
-              maxY: (maxY + 1) * cellSize,
-            });
+          const avgDiff = cellDiff / (cellPixels * 3); // Average per channel
+          if (avgDiff > 25) {
+            motionGrid[gy][gx] = true;
           }
         }
       }
-    }
 
-    // Convert blobs to BoundingBoxes (scale from analysis canvas to 640x480 reference)
-    const scaleX = 640 / canvasWidth;
-    const scaleY = 480 / canvasHeight;
+      // Connected-component labeling (flood-fill) to group motion cells into blobs
+      const visited: boolean[][] = Array.from({ length: gridH }, () => Array(gridW).fill(false));
+      const blobs: { minX: number; minY: number; maxX: number; maxY: number }[] = [];
 
-    // Sort by area descending, take ONLY the single largest blob
-    const sorted = blobs
-      .map(b => ({
-        ...b,
-        area: (b.maxX - b.minX) * (b.maxY - b.minY),
-      }))
-      .sort((a, b) => b.area - a.area)
-      .slice(0, 1);
+      for (let gy = 0; gy < gridH; gy++) {
+        for (let gx = 0; gx < gridW; gx++) {
+          if (motionGrid[gy][gx] && !visited[gy][gx]) {
+            // BFS flood fill
+            const queue: [number, number][] = [[gx, gy]];
+            visited[gy][gx] = true;
+            let minX = gx,
+              maxX = gx,
+              minY = gy,
+              maxY = gy;
 
-    const types: BoundingBox['type'][] = ['FACE', 'SIGNATURE', 'NAME', 'ID_NUMBER', 'ADDRESS'];
-    const labels = ['MOTION REGION', 'MOVING OBJECT', 'ACTIVITY ZONE', 'DYNAMIC TARGET', 'TRACKED REGION'];
+            while (queue.length > 0) {
+              const [cx, cy] = queue.shift()!;
+              minX = Math.min(minX, cx);
+              maxX = Math.max(maxX, cx);
+              minY = Math.min(minY, cy);
+              maxY = Math.max(maxY, cy);
 
-    return sorted.map((b, i) => ({
-      x: b.minX * scaleX,
-      y: b.minY * scaleY,
-      width: (b.maxX - b.minX) * scaleX,
-      height: (b.maxY - b.minY) * scaleY,
-      type: types[i % types.length],
-      label: labels[i % labels.length],
-      confidence: Math.max(0.7, Math.min(0.99, 0.85 + (b.area / 10000))),
-    }));
-  }, []);
+              // 4-connected neighbors
+              for (const [dx, dy] of [
+                [1, 0],
+                [-1, 0],
+                [0, 1],
+                [0, -1],
+              ]) {
+                const nx = cx + dx,
+                  ny = cy + dy;
+                if (nx >= 0 && nx < gridW && ny >= 0 && ny < gridH && !visited[ny][nx] && motionGrid[ny][nx]) {
+                  visited[ny][nx] = true;
+                  queue.push([nx, ny]);
+                }
+              }
+            }
+
+            // Only keep blobs that are large enough (at least 3x3 cells = 24x24 px)
+            const blobW = maxX - minX + 1;
+            const blobH = maxY - minY + 1;
+            if (blobW >= 3 && blobH >= 3) {
+              blobs.push({
+                minX: minX * cellSize,
+                minY: minY * cellSize,
+                maxX: (maxX + 1) * cellSize,
+                maxY: (maxY + 1) * cellSize,
+              });
+            }
+          }
+        }
+      }
+
+      // Convert blobs to BoundingBoxes (scale from analysis canvas to 640x480 reference)
+      const scaleX = 640 / canvasWidth;
+      const scaleY = 480 / canvasHeight;
+
+      // Sort by area descending, take ONLY the single largest blob
+      const sorted = blobs
+        .map((b) => ({
+          ...b,
+          area: (b.maxX - b.minX) * (b.maxY - b.minY),
+        }))
+        .sort((a, b) => b.area - a.area)
+        .slice(0, 1);
+
+      const types: BoundingBox['type'][] = ['FACE', 'SIGNATURE', 'NAME', 'ID_NUMBER', 'ADDRESS'];
+      const labels = ['MOTION REGION', 'MOVING OBJECT', 'ACTIVITY ZONE', 'DYNAMIC TARGET', 'TRACKED REGION'];
+
+      return sorted.map((b, i) => ({
+        x: b.minX * scaleX,
+        y: b.minY * scaleY,
+        width: (b.maxX - b.minX) * scaleX,
+        height: (b.maxY - b.minY) * scaleY,
+        type: types[i % types.length],
+        label: labels[i % labels.length],
+        confidence: Math.max(0.7, Math.min(0.99, 0.85 + b.area / 10000)),
+      }));
+    },
+    [],
+  );
 
   const processFrame = useCallback(
     async (videoElement: HTMLVideoElement): Promise<VisionResult> => {
@@ -450,12 +513,7 @@ export function useLocalVision(_modelId: string) {
 
         // STRATEGY 2: Pixel-Diff Motion Detection (universal fallback)
         if (boxes.length === 0 && prevFrameDataRef.current) {
-          boxes = detectMotionRegions(
-            currentFrameData,
-            prevFrameDataRef.current,
-            canvas.width,
-            canvas.height
-          );
+          boxes = detectMotionRegions(currentFrameData, prevFrameDataRef.current, canvas.width, canvas.height);
         }
 
         // Store current frame for next diff
@@ -504,13 +562,13 @@ export function useLocalVision(_modelId: string) {
         }
         const pixelCount = imageData.width * imageData.height;
         const avgBrightness = totalBrightness / pixelCount;
-        const darkRatio = (darkPixels / pixelCount * 100).toFixed(1);
-        const lightRatio = (lightPixels / pixelCount * 100).toFixed(1);
+        const darkRatio = ((darkPixels / pixelCount) * 100).toFixed(1);
+        const lightRatio = ((lightPixels / pixelCount) * 100).toFixed(1);
 
         // Simulate realistic OCR-like output with real frame metrics
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise((r) => setTimeout(r, 500));
 
-        return `DEEP-COVER VISION ANALYSIS — LIVE FRAME CAPTURE
+        return `WRAITH-OS VISION ANALYSIS — LIVE FRAME CAPTURE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Frame Metrics:
@@ -528,7 +586,7 @@ Text Extraction Status:
   [Current mode: Pixel-level analysis only]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Engine: Deep-Cover Vision (Native Pixel Analysis)
+Engine: Wraith OS Vision (Native Pixel Analysis)
 Processing: 100% Air-Gapped`;
       } finally {
         setIsProcessing(false);
@@ -546,4 +604,3 @@ Processing: 100% Air-Gapped`;
     error,
   };
 }
-

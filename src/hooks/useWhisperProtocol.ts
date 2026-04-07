@@ -22,7 +22,6 @@ export function useWhisperProtocol({ onLockdown, onOpenDarkChannel, onWipeMemory
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      console.warn("[Whisper Protocol] Native Speech Recognition API not supported in this browser.");
       return;
     }
 
@@ -50,7 +49,6 @@ export function useWhisperProtocol({ onLockdown, onOpenDarkChannel, onWipeMemory
     };
 
     recognition.onerror = (event: any) => {
-      console.error('[Whisper Protocol] Error:', event.error);
       if (event.error !== 'no-speech') {
         setIsListening(false);
       }
@@ -61,7 +59,7 @@ export function useWhisperProtocol({ onLockdown, onOpenDarkChannel, onWipeMemory
       if (isListening) {
         try {
           recognition.start();
-        } catch(e) {}
+        } catch (e) {}
       }
     };
 
@@ -74,10 +72,10 @@ export function useWhisperProtocol({ onLockdown, onOpenDarkChannel, onWipeMemory
 
   const toggleListening = useCallback(() => {
     if (!recognitionRef.current) {
-      alert("Whisper Protocol Offline: Browser lacks native SpeechRecognition APIs.");
+      alert('Whisper Protocol Offline: Browser lacks native SpeechRecognition APIs.');
       return;
     }
-    
+
     if (isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
@@ -87,8 +85,8 @@ export function useWhisperProtocol({ onLockdown, onOpenDarkChannel, onWipeMemory
         recognitionRef.current.start();
         setIsListening(true);
         onLog?.('INFO', '🎙️ Whisper Protocol Active. Background passive listening armed.');
-      } catch(e) {
-         // Already started
+      } catch (e) {
+        // Already started
       }
     }
   }, [isListening, onLog]);

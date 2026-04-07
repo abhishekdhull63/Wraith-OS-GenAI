@@ -38,11 +38,7 @@ import {
 } from 'lucide-react';
 import { useSecureIntelligence } from '../hooks/useSecureIntelligence';
 import type { IntelError } from '../hooks/useSecureIntelligence';
-import {
-  useNetworkStatus,
-  NetworkStatusIndicator,
-  AirGapBanner,
-} from './NetworkStatus';
+import { useNetworkStatus, NetworkStatusIndicator, AirGapBanner } from './NetworkStatus';
 import { buildAnalysisPrompt } from '../config/prompts';
 import { SAMPLE_LEAKED_DOCUMENT, SAMPLE_INTEL_LABEL } from '../config/demoData';
 
@@ -106,7 +102,11 @@ function createLogEntry(type: LogEntry['type'], message: string): LogEntry {
 
 // ─── Component ──────────────────────────────────────────────────────────────────
 
-export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked = true }: DeepCoverDashboardProps = {}) {
+export default function HoneypotDashboard({
+  onLock,
+  isBooted = true,
+  isUnlocked = true,
+}: DeepCoverDashboardProps = {}) {
   const intel = useSecureIntelligence();
   const { isOnline } = useNetworkStatus();
 
@@ -183,73 +183,76 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
   useFaradayMonitor(onLock || (() => {}), addLog);
 
   // ─── Whistleblower Voice Masker (Web Audio API) ───────────────────────────
-  const setupVoiceMasker = useCallback((stream: MediaStream): MediaStream => {
-    if (!isVoiceMasked) return stream;
+  const setupVoiceMasker = useCallback(
+    (stream: MediaStream): MediaStream => {
+      if (!isVoiceMasked) return stream;
 
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    audioContextRef.current = ctx;
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = ctx;
 
-    const source = ctx.createMediaStreamSource(stream);
-    const destination = ctx.createMediaStreamDestination();
-    const analyser = ctx.createAnalyser();
+      const source = ctx.createMediaStreamSource(stream);
+      const destination = ctx.createMediaStreamDestination();
+      const analyser = ctx.createAnalyser();
 
-    // Masking Filters (Muffle & Deepen)
-    const lowpass = ctx.createBiquadFilter();
-    lowpass.type = 'lowpass';
-    lowpass.frequency.value = 800; // Muffle high frequencies (identity markers)
+      // Masking Filters (Muffle & Deepen)
+      const lowpass = ctx.createBiquadFilter();
+      lowpass.type = 'lowpass';
+      lowpass.frequency.value = 800; // Muffle high frequencies (identity markers)
 
-    const peq = ctx.createBiquadFilter();
-    peq.type = 'peaking';
-    peq.frequency.value = 300; // Boost lower frequencies
-    peq.gain.value = 10;
+      const peq = ctx.createBiquadFilter();
+      peq.type = 'peaking';
+      peq.frequency.value = 300; // Boost lower frequencies
+      peq.gain.value = 10;
 
-    source.connect(lowpass);
-    lowpass.connect(peq);
-    peq.connect(analyser);
-    analyser.connect(destination); // Connect analyser to destination for the stream
+      source.connect(lowpass);
+      lowpass.connect(peq);
+      peq.connect(analyser);
+      analyser.connect(destination); // Connect analyser to destination for the stream
 
-    // Visual Waveform
-    analyser.fftSize = 256;
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    const canvas = canvasRef.current;
-    const canvasCtx = canvas?.getContext('2d');
+      // Visual Waveform
+      analyser.fftSize = 256;
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      const canvas = canvasRef.current;
+      const canvasCtx = canvas?.getContext('2d');
 
-    const draw = () => {
-      if (!canvas || !canvasCtx) {
-        animationFrameRef.current = requestAnimationFrame(draw); // Keep trying if canvas not ready
-        return;
-      }
-      animationFrameRef.current = requestAnimationFrame(draw);
-      analyser.getByteTimeDomainData(dataArray);
+      const draw = () => {
+        if (!canvas || !canvasCtx) {
+          animationFrameRef.current = requestAnimationFrame(draw); // Keep trying if canvas not ready
+          return;
+        }
+        animationFrameRef.current = requestAnimationFrame(draw);
+        analyser.getByteTimeDomainData(dataArray);
 
-      canvasCtx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous frame
-      canvasCtx.fillStyle = 'rgba(0, 0, 0, 0)'; // Transparent background
-      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+        canvasCtx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous frame
+        canvasCtx.fillStyle = 'rgba(0, 0, 0, 0)'; // Transparent background
+        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-      canvasCtx.lineWidth = 2;
-      canvasCtx.strokeStyle = isVoiceMasked ? '#ef4444' : '#10b981'; // Red if masked, Green if raw
-      canvasCtx.beginPath();
+        canvasCtx.lineWidth = 2;
+        canvasCtx.strokeStyle = isVoiceMasked ? '#ef4444' : '#10b981'; // Red if masked, Green if raw
+        canvasCtx.beginPath();
 
-      const sliceWidth = (canvas.width * 1.0) / bufferLength;
-      let x = 0;
+        const sliceWidth = (canvas.width * 1.0) / bufferLength;
+        let x = 0;
 
-      for (let i = 0; i < bufferLength; i++) {
-        const v = dataArray[i] / 128.0;
-        const y = (v * canvas.height) / 2;
+        for (let i = 0; i < bufferLength; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = (v * canvas.height) / 2;
 
-        if (i === 0) canvasCtx.moveTo(x, y);
-        else canvasCtx.lineTo(x, y);
-        x += sliceWidth;
-      }
+          if (i === 0) canvasCtx.moveTo(x, y);
+          else canvasCtx.lineTo(x, y);
+          x += sliceWidth;
+        }
 
-      canvasCtx.lineTo(canvas.width, canvas.height / 2);
-      canvasCtx.stroke();
-    };
-    draw();
+        canvasCtx.lineTo(canvas.width, canvas.height / 2);
+        canvasCtx.stroke();
+      };
+      draw();
 
-    return destination.stream;
-  }, [isVoiceMasked]);
+      return destination.stream;
+    },
+    [isVoiceMasked],
+  );
 
   const teardownVoiceMasker = useCallback(() => {
     if (animationFrameRef.current) {
@@ -257,7 +260,9 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
       animationFrameRef.current = 0;
     }
     if (audioContextRef.current) {
-      audioContextRef.current.close().catch(console.error);
+      audioContextRef.current.close().catch(() => {
+        /* AudioContext close error suppressed */
+      });
       audioContextRef.current = null;
     }
     // Clear canvas when tearing down
@@ -268,7 +273,6 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
       }
     }
   }, []);
-
 
   const handleAnalyze = useCallback(async () => {
     if (!inputText.trim() || !intel.llm.isReady) return;
@@ -292,8 +296,8 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
         addLog(
           'SUCCESS',
           `🔐 TOOL CALL: ${result.toolCall.name}() → Evidence preserved ` +
-          `[${result.savedEntry.threat_level}] Hash: ${result.savedEntry.digital_fingerprint.slice(0, 16)}… ` +
-          `[${result.pipelineMs.toFixed(0)}ms]`,
+            `[${result.savedEntry.threat_level}] Hash: ${result.savedEntry.digital_fingerprint.slice(0, 16)}… ` +
+            `[${result.pipelineMs.toFixed(0)}ms]`,
         );
         // Refresh the vault
         setVaultRefreshKey((k) => k + 1);
@@ -324,7 +328,10 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
     } else {
       // Start recording
       try {
-        addLog('INFO', `🎙️ Secure recording started${isVoiceMasked ? ' (Voice Masking ENGAGED)' : ''} — audio stays local`);
+        addLog(
+          'INFO',
+          `🎙️ Secure recording started${isVoiceMasked ? ' (Voice Masking ENGAGED)' : ''} — audio stays local`,
+        );
         setTranscript('');
 
         const rawStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -338,7 +345,6 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
       }
     }
   }, [intel, addLog, isVoiceMasked, setupVoiceMasker, teardownVoiceMasker]);
-
 
   // ── Copy Result ─────────────────────────────────────────────────────────────
   const handleCopy = useCallback(async () => {
@@ -389,9 +395,7 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
           </button>
           {sidebarOpen && (
             <div className="animate-fade-in">
-              <h1 className="text-lg font-bold text-gray-100 tracking-tight">
-                Deep-Cover
-              </h1>
+              <h1 className="text-lg font-bold text-gray-100 tracking-tight">Wraith OS</h1>
               <p className="text-xs text-gray-500 font-mono">HUB v1.0</p>
             </div>
           )}
@@ -400,35 +404,23 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
         {sidebarOpen && (
           <div className="flex-1 p-5 space-y-6 animate-fade-in overflow-y-auto">
             {/* OPSEC Telemetry Widget */}
-            <OpsecDashboard 
-              motionActive={true} 
-              faradayActive={!isOnline} 
-              vaultEncrypted={true} 
-            />
+            <OpsecDashboard motionActive={true} faradayActive={!isOnline} vaultEncrypted={true} />
 
             {/* System Status */}
             <div>
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                System Status
-              </h3>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">System Status</h3>
               <div className="space-y-3">
                 {/* Live Network Status Indicator */}
                 <NetworkStatusIndicator isOnline={isOnline} collapsed={false} />
 
                 {/* Overall Status */}
-                <StatusPill
-                  label="System"
-                  status={intel.systemStatus}
-                  icon={<Activity className="w-3.5 h-3.5" />}
-                />
+                <StatusPill label="System" status={intel.systemStatus} icon={<Activity className="w-3.5 h-3.5" />} />
               </div>
             </div>
 
             {/* AI Engine Health */}
             <div>
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                AI Engines
-              </h3>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">AI Engines</h3>
               <div className="space-y-2">
                 <EngineIndicator
                   name="LLM (SmolLM2)"
@@ -451,13 +443,10 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
             <div className="p-3 rounded-xl bg-cyan-500/5 border border-cyan-500/15">
               <div className="flex items-center gap-2 mb-2">
                 <Lock className="w-4 h-4 text-cyan-400" />
-                <span className="text-sm font-semibold text-cyan-400">
-                  Privacy Shield
-                </span>
+                <span className="text-sm font-semibold text-cyan-400">Privacy Shield</span>
               </div>
               <p className="text-xs text-gray-500 leading-relaxed">
-                All data processed locally via WebAssembly. Nothing leaves this
-                browser.
+                All data processed locally via WebAssembly. Nothing leaves this browser.
               </p>
             </div>
           </div>
@@ -473,9 +462,7 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
         {/* Footer */}
         {sidebarOpen && (
           <div className="p-5 border-t border-white/5 animate-fade-in">
-            <p className="text-xs text-gray-600 text-center">
-              HackXtreme 2026
-            </p>
+            <p className="text-xs text-gray-600 text-center">HackXtreme 2026</p>
           </div>
         )}
       </aside>
@@ -493,18 +480,17 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-cyan-400" />
-                <h2 className="text-xl font-bold text-gray-100">
-                  Intelligence Dashboard
-                </h2>
+                <h2 className="text-xl font-bold text-gray-100">Intelligence Dashboard</h2>
               </div>
               <span className="px-2.5 py-0.5 text-[10px] font-bold font-mono uppercase tracking-widest text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 rounded-full">
                 Local AI
               </span>
             </div>
             <div className="flex items-center gap-4">
-
               <div className="flex items-center gap-2 text-xs text-gray-500 font-mono">
-                <CircleDot className={`w-3 h-3 ${intel.systemStatus === 'ready' ? 'text-emerald-400' : intel.systemStatus === 'error' ? 'text-red-400' : 'text-amber-400 animate-pulse-glow'}`} />
+                <CircleDot
+                  className={`w-3 h-3 ${intel.systemStatus === 'ready' ? 'text-emerald-400' : intel.systemStatus === 'error' ? 'text-red-400' : 'text-amber-400 animate-pulse-glow'}`}
+                />
                 {intel.systemStatus.toUpperCase()}
               </div>
             </div>
@@ -526,12 +512,8 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
                   <Eye className="w-5 h-5 text-cyan-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-100">
-                    Entity Analyzer
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    Powered by local LLM · Zero cloud
-                  </p>
+                  <h3 className="text-lg font-bold text-gray-100">Entity Analyzer</h3>
+                  <p className="text-xs text-gray-500">Powered by local LLM · Zero cloud</p>
                 </div>
               </div>
 
@@ -540,7 +522,11 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
                 {EXAMPLE_PROMPTS.map((prompt, i) => (
                   <button
                     key={i}
-                    onClick={() => setInputText((prev) => prev ? `${prev}\n\n[Directive: ${prompt}]` : `[Directive: ${prompt}]\n\n`)}
+                    onClick={() =>
+                      setInputText((prev) =>
+                        prev ? `${prev}\n\n[Directive: ${prompt}]` : `[Directive: ${prompt}]\n\n`,
+                      )
+                    }
                     className="
                       px-3 py-1.5 text-xs font-mono text-cyan-300
                       bg-cyan-500/5 border border-cyan-500/15 rounded-full
@@ -568,8 +554,7 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
                   w-fit
                 "
               >
-                <FileText className="w-3.5 h-3.5" />
-                [ LOAD INTERCEPTED INTEL ]
+                <FileText className="w-3.5 h-3.5" />[ LOAD INTERCEPTED INTEL ]
               </button>
 
               {/* Secure File Drop */}
@@ -619,11 +604,7 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
                       onClick={() => setResultExpanded(!resultExpanded)}
                       className="flex items-center gap-2 text-sm font-semibold text-gray-300 hover:text-gray-100 transition-colors"
                     >
-                      {resultExpanded ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )}
+                      {resultExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                       Analysis Output
                     </button>
                     <button
@@ -654,9 +635,7 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
                       "
                     >
                       {analysisResult}
-                      {isStreaming && (
-                        <span className="inline-block w-2 h-4 ml-1 bg-cyan-400 animate-pulse-glow" />
-                      )}
+                      {isStreaming && <span className="inline-block w-2 h-4 ml-1 bg-cyan-400 animate-pulse-glow" />}
                     </div>
                   )}
                 </div>
@@ -672,12 +651,8 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
                   <Radio className="w-5 h-5 text-red-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-100">
-                    Audio Leak Stream
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    Powered by local Whisper · Air-gapped
-                  </p>
+                  <h3 className="text-lg font-bold text-gray-100">Audio Leak Stream</h3>
+                  <p className="text-xs text-gray-500">Powered by local Whisper · Air-gapped</p>
                 </div>
               </div>
 
@@ -695,11 +670,7 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
                       <div className="w-3 h-3 rounded-full bg-gray-600" />
                     )}
                     <span className="text-sm font-mono text-gray-400">
-                      {intel.stt.isRecording
-                        ? 'RECORDING'
-                        : intel.stt.isTranscribing
-                          ? 'TRANSCRIBING...'
-                          : 'STANDBY'}
+                      {intel.stt.isRecording ? 'RECORDING' : intel.stt.isTranscribing ? 'TRANSCRIBING...' : 'STANDBY'}
                     </span>
                   </div>
 
@@ -707,17 +678,23 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
                     {/* Whistleblower Voice Masker Toggle */}
                     <label className="flex items-center gap-2 cursor-pointer group">
                       <div className="relative flex items-center">
-                        <input 
-                          type="checkbox" 
-                          className="sr-only" 
+                        <input
+                          type="checkbox"
+                          className="sr-only"
                           checked={isVoiceMasked}
                           onChange={(e) => setIsVoiceMasked(e.target.checked)}
                           disabled={intel.stt.isRecording}
                         />
-                        <div className={`block w-9 h-5 rounded-full transition-colors ${isVoiceMasked ? 'bg-red-500/20 border border-red-500/50' : 'bg-white/5 border border-white/10'}`}></div>
-                        <div className={`absolute left-1 w-3.5 h-3.5 rounded-full transition-transform ${isVoiceMasked ? 'transform translate-x-3.5 bg-red-400' : 'bg-gray-400'}`}></div>
+                        <div
+                          className={`block w-9 h-5 rounded-full transition-colors ${isVoiceMasked ? 'bg-red-500/20 border border-red-500/50' : 'bg-white/5 border border-white/10'}`}
+                        ></div>
+                        <div
+                          className={`absolute left-1 w-3.5 h-3.5 rounded-full transition-transform ${isVoiceMasked ? 'transform translate-x-3.5 bg-red-400' : 'bg-gray-400'}`}
+                        ></div>
                       </div>
-                      <span className={`text-[10px] font-mono font-bold tracking-wider ${isVoiceMasked ? 'text-red-400' : 'text-gray-500 group-hover:text-gray-400'}`}>
+                      <span
+                        className={`text-[10px] font-mono font-bold tracking-wider ${isVoiceMasked ? 'text-red-400' : 'text-gray-500 group-hover:text-gray-400'}`}
+                      >
                         {isVoiceMasked ? 'MASK: ON' : 'MASK: OFF'}
                       </span>
                       <VolumeX className={`w-3.5 h-3.5 ${isVoiceMasked ? 'text-red-400' : 'text-gray-600'}`} />
@@ -738,12 +715,7 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
                       AWAITING AUDIO STREAM
                     </div>
                   )}
-                  <canvas 
-                    ref={canvasRef} 
-                    className="w-full h-full opacity-80"
-                    width={400} 
-                    height={48}
-                  />
+                  <canvas ref={canvasRef} className="w-full h-full opacity-80" width={400} height={48} />
                 </div>
 
                 {/* Mic Buttons */}
@@ -772,9 +744,8 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
                   <Lock className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-gray-500 leading-relaxed">
-                    Audio is captured directly into browser memory and processed
-                    locally by Whisper WASM. No audio data ever leaves this
-                    device.
+                    Audio is captured directly into browser memory and processed locally by Whisper WASM. No audio data
+                    ever leaves this device.
                   </p>
                 </div>
               </div>
@@ -827,32 +798,25 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
                 <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/5 border border-red-500/20 animate-slide-up">
                   <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-semibold text-red-400">
-                      {intel.stt.error.code}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {intel.stt.error.message}
-                    </p>
+                    <p className="text-sm font-semibold text-red-400">{intel.stt.error.code}</p>
+                    <p className="text-xs text-gray-500 mt-1">{intel.stt.error.message}</p>
                   </div>
                 </div>
               )}
             </section>
-            
+
             {/* COVERT OPS LAYER: Steganography & Dead Drop */}
             <GhostProtocol onLog={addLog} />
-            <DeadDrop 
+            <DeadDrop
               onLog={addLog}
               onMessageReceived={(text) => {
-                 setInputText((prev) =>
-                   prev
-                     ? `${prev}\n\n--- INBOUND P2P DROP ---\n${text}`
-                     : `--- INBOUND P2P DROP ---\n${text}`,
-                 );
-                 addLog('SUCCESS', '📦 P2P Dead Drop payload loaded into Entity Analyzer');
+                setInputText((prev) =>
+                  prev ? `${prev}\n\n--- INBOUND P2P DROP ---\n${text}` : `--- INBOUND P2P DROP ---\n${text}`,
+                );
+                addLog('SUCCESS', '📦 P2P Tunnel payload loaded into Traffic Anomaly Engine');
               }}
             />
           </div>
-
 
           {/* ══════════════════════════════════════════════════════════════════
               FULL-WIDTH: VAULT INTERROGATION (Global Database Search)
@@ -880,9 +844,7 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
                 <div className="p-2 rounded-lg bg-amber-500/10">
                   <Activity className="w-5 h-5 text-amber-400" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-100">
-                  Intel Stream
-                </h3>
+                <h3 className="text-lg font-bold text-gray-100">Intel Stream</h3>
                 <span className="px-2 py-0.5 text-[10px] font-mono font-bold text-gray-500 bg-white/5 rounded-full">
                   {logEntries.length} events
                 </span>
@@ -907,9 +869,7 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
               style={{ boxShadow: 'inset 0 0 20px rgba(0,0,0,0.8)' }}
             >
               {logEntries.length === 0 ? (
-                <p className="text-gray-600 text-center py-4">
-                  System standing by… awaiting intel operations.
-                </p>
+                <p className="text-gray-600 text-center py-4">System standing by… awaiting intel operations.</p>
               ) : (
                 <div className="space-y-1.5">
                   {logEntries.map((entry) => (
@@ -917,12 +877,8 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
                       key={entry.id}
                       className="log-entry flex gap-3 pb-1.5 border-b border-dashed border-white/5 last:border-0"
                     >
-                      <span className="text-gray-600 flex-shrink-0">
-                        [{entry.time}]
-                      </span>
-                      <span className={`font-semibold ${LOG_COLORS[entry.type]}`}>
-                        {entry.message}
-                      </span>
+                      <span className="text-gray-600 flex-shrink-0">[{entry.time}]</span>
+                      <span className={`font-semibold ${LOG_COLORS[entry.type]}`}>{entry.message}</span>
                     </div>
                   ))}
                 </div>
@@ -937,15 +893,7 @@ export default function HoneypotDashboard({ onLock, isBooted = true, isUnlocked 
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
-function StatusPill({
-  label,
-  status,
-  icon,
-}: {
-  label: string;
-  status: string;
-  icon: React.ReactNode;
-}) {
+function StatusPill({ label, status, icon }: { label: string; status: string; icon: React.ReactNode }) {
   const colorMap: Record<string, string> = {
     ready: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
     partial: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
@@ -954,16 +902,12 @@ function StatusPill({
   };
 
   return (
-    <div
-      className={`flex items-center gap-2.5 p-3 rounded-xl border ${colorMap[status] || colorMap.initializing}`}
-    >
+    <div className={`flex items-center gap-2.5 p-3 rounded-xl border ${colorMap[status] || colorMap.initializing}`}>
       {icon}
       <div className="flex-1">
         <p className="text-sm font-medium">{label}</p>
       </div>
-      <span className="text-[10px] font-mono font-bold uppercase tracking-wider">
-        {status}
-      </span>
+      <span className="text-[10px] font-mono font-bold uppercase tracking-wider">{status}</span>
     </div>
   );
 }

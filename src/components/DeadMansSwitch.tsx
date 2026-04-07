@@ -23,7 +23,11 @@ const DB_NAME = 'deep-cover-evidence-locker';
 
 // ─── Component ──────────────────────────────────────────────────────────────────
 
-export default function DeadMansSwitch({ onLog }: { onLog?: (type: 'INFO' | 'WARNING' | 'ERROR', msg: string) => void }) {
+export default function DeadMansSwitch({
+  onLog,
+}: {
+  onLog?: (type: 'INFO' | 'WARNING' | 'ERROR', msg: string) => void;
+}) {
   const [isTriggered, setIsTriggered] = useState(false);
   const [timeLeft, setTimeLeft] = useState(COUNTDOWN_MS / 1000);
   const [abortInput, setAbortInput] = useState('');
@@ -35,7 +39,7 @@ export default function DeadMansSwitch({ onLog }: { onLog?: (type: 'INFO' | 'WAR
   // ── Execute Purge (same logic as BurnProtocol) ────────────────────────────
   const executePurge = useCallback(async () => {
     onLog?.('ERROR', "💀 DEAD MAN'S SWITCH EXPIRED. INITIATING PURGE.");
-    
+
     // 1. Destroy IndexedDB
     try {
       const deleteReq = indexedDB.deleteDatabase(DB_NAME);
@@ -47,8 +51,12 @@ export default function DeadMansSwitch({ onLog }: { onLog?: (type: 'INFO' | 'WAR
     } catch {}
 
     // 2. Clear storages
-    try { localStorage.clear(); } catch {}
-    try { sessionStorage.clear(); } catch {}
+    try {
+      localStorage.clear();
+    } catch {}
+    try {
+      sessionStorage.clear();
+    } catch {}
 
     // 3. Clear caches
     try {
@@ -159,15 +167,13 @@ export default function DeadMansSwitch({ onLog }: { onLog?: (type: 'INFO' | 'WAR
             <p>DEAD MAN'S SWITCH INITIATED</p>
           </div>
           <p className="text-gray-400 text-sm leading-relaxed max-w-md mx-auto">
-            No activity detected for {(INACTIVITY_TIMEOUT_MS / 60000).toFixed(0)} minutes. 
-            Automated defensive purge protocol is active. All vault data will be permanently destroyed.
+            No activity detected for {(INACTIVITY_TIMEOUT_MS / 60000).toFixed(0)} minutes. Automated defensive purge
+            protocol is active. All vault data will be permanently destroyed.
           </p>
         </div>
 
         <div className="py-6 border-y border-red-500/20">
-          <p className="text-sm font-mono text-red-500/60 uppercase tracking-widest mb-3">
-            T-MINUS
-          </p>
+          <p className="text-sm font-mono text-red-500/60 uppercase tracking-widest mb-3">T-MINUS</p>
           <p
             className="text-7xl font-mono font-bold tracking-tight text-white"
             style={{ textShadow: '0 0 40px rgba(255,255,255,0.3)' }}
