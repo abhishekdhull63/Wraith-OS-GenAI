@@ -52,6 +52,7 @@ Network intrusion isn't just digital. In shared small offices, "shoulder surfing
 - **Faraday Cage Mode:** Active network interface monitoring — triggers instant lockdown if connectivity is detected during air-gapped operations.
 - **Burn Protocol:** Zero-Trust one-click purge of all persistent storage.
 - **Whisper Protocol:** Voice-activated command system using browser SpeechRecognition — supports voice-triggered lockdown and memory wipe.
+- **Oppenheimer Protocol (FRACTURE KEY):** Splinters the master AES encryption key using Shamir's Secret Sharing scheme into 5 steganographic QR "Horcrux" image shards. Requires 3-of-5 physical fragments to reconstruct via the Lazarus Unlock interface.
 
 ### 7. Threat Analysis Board
 - **Network graph visualization** with interactive node inspector for mapping entity relationships and threat connections.
@@ -65,7 +66,7 @@ Network intrusion isn't just digital. In shared small offices, "shoulder surfing
 | **Framework** | React 19 + TypeScript | UI & State Management (Vite 7 bundler) |
 | **Edge Compute AI** | `@mlc-ai/web-llm` (SmolLM2) | In-browser quantized LLM for log analysis & threat classification |
 | **Speech-to-Text** | Whisper (WASM) | Local audio transcription & voice command recognition |
-| **Cryptography** | WebCrypto API | AES-GCM 256-bit encryption, SHA-256 fingerprinting, PBKDF2 |
+| **Cryptography** | WebCrypto API | AES-GCM 256-bit encryption, SHA-256, PBKDF2, Shamir's SSS |
 | **Networking** | WebRTC Data Channels | Serverless mesh P2P communication |
 | **Storage** | IndexedDB | SHA-256 fingerprinted evidence locker |
 | **Audio Processing** | Web Audio API | Voice masking via BiquadFilter chain |
@@ -116,6 +117,7 @@ Inside the hidden terminal, type `help` to see operational directives:
 | `clear` | Purge terminal display logs |
 | `arm faraday` | Isolate radio network interfaces |
 | `lockdown --burn` | Execute physical storage destruction (wipes all DBs) |
+| `shatter --key-split` | Splinter Master Encryption Key via Shamir's SSC |
 | `chronos --sync` | Mount live active mesh node telemetry stream |
 
 ### Dashboard Panels (Post-Unlock)
@@ -137,7 +139,7 @@ Inside the hidden terminal, type `help` to see operational directives:
 
 | Module | Function |
 |--------|----------|
-| **OPSEC Dashboard** | Battery, VRAM, Sentinel Net, Air-Gap Cage, AES-GCM Lock status |
+| **OPSEC Dashboard** | Battery, VRAM, Sentinel Net, Air-Gap Cage, AES-GCM Lock, FRACTURE KEY |
 | **Active Mesh Nodes** | Live status of connected network nodes |
 | **AI Engines** | Health indicators for LLM (SmolLM2) and STT (Whisper) |
 | **Privacy Shield** | Confirmation badge for local-only processing |
@@ -170,6 +172,8 @@ Wraith-OS-GenAI/
 │   │   ├── TelemetryLog.tsx       # P2P encrypted chat interface
 │   │   ├── GhostProtocol.tsx      # Steganographic message protocol
 │   │   ├── ShadowPartner.tsx      # AI autonomous analysis assistant
+│   │   ├── HorcruxGenerator.tsx   # Shamir's Secret Sharing key splitter
+│   │   ├── LazarusUnlock.tsx      # Key fragment reassembly unlock
 │   │   ├── BurnProtocol.tsx       # Zero-Trust data destruction
 │   │   ├── DeadMansSwitch.tsx     # Autonomous inactivity protection
 │   │   ├── BiometricOverwatch.tsx # Webcam-based operator monitoring
@@ -195,7 +199,7 @@ Wraith-OS-GenAI/
 │   │   ├── useWebLLM.ts           # WebLLM integration wrapper
 │   │   ├── useFaradayMonitor.ts   # Network monitor tripwire
 │   │   ├── usePanicBlur.ts        # Panic screen blur overlay
-│   │   ├── crypto/                # AES-GCM encryption, pattern locks
+│   │   ├── crypto/                # Shamir's SSS, AES-GCM, pattern locks
 │   │   ├── acoustic/              # FSK acoustic modem (emitter/receiver)
 │   │   ├── optical/               # QR strobe optical transmitter
 │   │   ├── security/              # Security worker threads

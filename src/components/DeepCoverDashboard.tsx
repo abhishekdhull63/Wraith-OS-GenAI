@@ -59,6 +59,8 @@ import { useFaradayMonitor } from '../lib/useFaradayMonitor';
 import { useWhisperProtocol } from '../hooks/useWhisperProtocol';
 import { useDeadMansSwitch } from '../hooks/useDeadMansSwitch';
 import { useFaradayCage } from '../hooks/useFaradayCage';
+import HorcruxGenerator from './HorcruxGenerator';
+import LazarusUnlock from './LazarusUnlock';
 
 import TelemetryLog from './TelemetryLog';
 import type { IncomingP2PMessage } from './TelemetryLog';
@@ -158,6 +160,12 @@ export default function DeepCoverDashboard({
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isSketchpadOpen, setIsSketchpadOpen] = useState(false);
+
+  // ── Oppenheimer State ───────────────────────────────────────────────────────
+  const [showHorcruxGen, setShowHorcruxGen] = useState(false);
+  const [isOppenheimerLocked, setIsOppenheimerLocked] = useState(
+    localStorage.getItem('oppenheimer_active') === 'true' && !sessionStorage.getItem('oppenheimer_seed'),
+  );
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
   const addLog = useCallback((type: LogEntry['type'], message: string) => {
@@ -503,6 +511,22 @@ export default function DeepCoverDashboard({
       <div className="flex min-h-screen">
         <DeadMansSwitch onLog={addLog} />
 
+        {showHorcruxGen && (
+          <HorcruxGenerator
+            onComplete={() => {
+              setShowHorcruxGen(false);
+              setIsOppenheimerLocked(true);
+              addLog(
+                'WARNING',
+                '💀 OPPENHEIMER PROTOCOL: Master key evacuated from disk. System is operating on fractional logic boundaries.',
+              );
+            }}
+            onCancel={() => setShowHorcruxGen(false)}
+          />
+        )}
+
+        {isOppenheimerLocked && <LazarusUnlock onUnlocked={() => setIsOppenheimerLocked(false)} />}
+
 
 
         {/* ═══════════════════════════════════════════════════════════════════════
@@ -542,7 +566,7 @@ export default function DeepCoverDashboard({
                 faradayActive={!isOnline}
                 vaultEncrypted={true}
                 onToggleFaraday={() => setIsFaradayArmed(!isFaradayArmed)}
-
+                onArmOppenheimer={() => setShowHorcruxGen(true)}
               />
 
               {/* Active Mesh Nodes */}

@@ -141,6 +141,7 @@ export default function WraithTerminal({ onCommand, onUnlock }: WraithTerminalPr
         await pushSystemMessage('  clear                   - Purge terminal display logs');
         await pushSystemMessage('  arm faraday             - Isolates radio network interfaces');
         await pushSystemMessage('  lockdown --burn         - Executes physical storage destruction');
+        await pushSystemMessage("  shatter --key-split     - Splinters Master Encryption Key via Shamir's SSC");
         await pushSystemMessage('  chronos --sync          - Mounts live active mesh node telemetry stream');
       } else if (command === 'status') {
         await pushSystemMessage('[MESH NODES: ONLINE]');
@@ -175,6 +176,11 @@ export default function WraithTerminal({ onCommand, onUnlock }: WraithTerminalPr
         await pushSystemMessage(`Encoding QR Base64 Strobe matrix: [${payload}]`, 400);
         window.dispatchEvent(new CustomEvent('WRAITH_ARGUS_TRIGGER', { detail: payload }));
         onCommand('argus --strobe', [payload]);
+      } else if (command === 'shatter' && (args[0] === '--key-split' || args[0] === '--horcrux')) {
+        await pushSystemMessage('CRITICAL: Accessing PBKDF2 Master arrays...', 500);
+        await pushSystemMessage('Deriving fractional polynomial logic gates...', 600);
+        await pushSystemMessage('Evacuating persistent bounds...', 400);
+        onCommand('shatter --key-split', []);
       } else if (command === 'whoami') {
         await pushSystemMessage('UNAUTHORIZED QUERY. Access logged and reported to local authorities.');
       } else if (command === 'sudo') {
