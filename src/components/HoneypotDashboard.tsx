@@ -462,7 +462,7 @@ export default function HoneypotDashboard({
         {/* Footer */}
         {sidebarOpen && (
           <div className="p-5 border-t border-white/5 animate-fade-in">
-            <p className="text-xs text-gray-600 text-center">HackXtreme 2026</p>
+
           </div>
         )}
       </aside>
