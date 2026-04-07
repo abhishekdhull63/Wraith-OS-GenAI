@@ -1,4 +1,4 @@
-Live Deployed Link — https://deep-cover-hack-xtream.vercel.app/
+Live Deployed Link — https://wraith-os-genai.vercel.app/
 
 # Wraith OS — PS-21: Zero-Trust Local Infrastructure
 
